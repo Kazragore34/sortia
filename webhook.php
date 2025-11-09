@@ -32,7 +32,7 @@ if ($key_data) {
 // 4. Lista de números VENDEDORMASTER (los 3 números especiales)
 $vendedormasters = [
     "34722539447@s.whatsapp.net",  // Reemplaza con el primer número real
-    "519674952331@s.whatsapp.net", // Reemplaza con el segundo número real
+    "51986548321@s.whatsapp.net", // Reemplaza con el segundo número real
     // Agrega el tercer número aquí: "NUMERO3@s.whatsapp.net"
 ];
 
