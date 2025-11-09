@@ -292,3 +292,33 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
+/* Carrusel de imágenes */
+.carousel-image {
+    transition: opacity 0.5s ease-in-out;
+}
+
+.carousel-dot {
+    transition: all 0.3s ease;
+}
+
+.carousel-dot.active-dot {
+    width: 0.75rem;
+    height: 0.75rem;
+    background: white !important;
+}
+
+#carousel-prev,
+#carousel-next {
+    backdrop-filter: blur(4px);
+}
+
+/* Optimización de imágenes */
+img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+.carousel-image {
+    image-rendering: auto;
+}
+

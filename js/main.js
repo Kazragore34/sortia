@@ -221,13 +221,19 @@ function initTicketPurchase() {
     });
 
     // Botón de cantidad personalizada
-    const customButton = document.querySelector('#comprar button:last-of-type');
+    const customButton = document.getElementById('custom-purchase-btn');
     if (customButton) {
         customButton.addEventListener('click', function() {
             const input = document.getElementById('custom-amount');
+            if (!input) {
+                console.error('No se encontró el input de cantidad personalizada');
+                return;
+            }
             const amount = parseInt(input.value) || CONFIG.minTickets;
             handlePurchase(amount);
         });
+    } else {
+        console.error('No se encontró el botón de compra personalizada');
     }
 }
 
@@ -356,6 +362,113 @@ Por favor, confírmame la disponibilidad y cómo proceder con el pago. ¡Gracias
 }
 
 // ============================================
+// CARRUSEL DE IMÁGENES
+// ============================================
+class ImageCarousel {
+    constructor() {
+        this.currentIndex = 0;
+        this.images = document.querySelectorAll('.carousel-image');
+        this.dots = document.querySelectorAll('.carousel-dot');
+        this.prevBtn = document.getElementById('carousel-prev');
+        this.nextBtn = document.getElementById('carousel-next');
+        this.autoPlayInterval = null;
+        this.init();
+    }
+
+    init() {
+        if (this.images.length === 0) return;
+
+        // Event listeners para botones
+        if (this.prevBtn) {
+            this.prevBtn.addEventListener('click', () => this.prev());
+        }
+        if (this.nextBtn) {
+            this.nextBtn.addEventListener('click', () => this.next());
+        }
+
+        // Event listeners para dots
+        this.dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => this.goTo(index));
+        });
+
+        // Auto-play cada 5 segundos
+        this.startAutoPlay();
+
+        // Pausar auto-play al hacer hover
+        const carousel = document.getElementById('moto-carousel');
+        if (carousel) {
+            carousel.addEventListener('mouseenter', () => this.stopAutoPlay());
+            carousel.addEventListener('mouseleave', () => this.startAutoPlay());
+        }
+    }
+
+    showImage(index) {
+        // Ocultar todas las imágenes
+        this.images.forEach(img => {
+            img.classList.remove('opacity-100');
+            img.classList.add('opacity-0');
+        });
+
+        // Mostrar imagen actual
+        if (this.images[index]) {
+            this.images[index].classList.remove('opacity-0');
+            this.images[index].classList.add('opacity-100');
+        }
+
+        // Actualizar dots
+        this.dots.forEach((dot, i) => {
+            if (i === index) {
+                dot.classList.add('active-dot', 'bg-white');
+                dot.classList.remove('bg-white/50');
+            } else {
+                dot.classList.remove('active-dot', 'bg-white');
+                dot.classList.add('bg-white/50');
+            }
+        });
+
+        this.currentIndex = index;
+    }
+
+    next() {
+        const nextIndex = (this.currentIndex + 1) % this.images.length;
+        this.showImage(nextIndex);
+        this.resetAutoPlay();
+    }
+
+    prev() {
+        const prevIndex = (this.currentIndex - 1 + this.images.length) % this.images.length;
+        this.showImage(prevIndex);
+        this.resetAutoPlay();
+    }
+
+    goTo(index) {
+        if (index >= 0 && index < this.images.length) {
+            this.showImage(index);
+            this.resetAutoPlay();
+        }
+    }
+
+    startAutoPlay() {
+        this.stopAutoPlay();
+        this.autoPlayInterval = setInterval(() => {
+            this.next();
+        }, 5000);
+    }
+
+    stopAutoPlay() {
+        if (this.autoPlayInterval) {
+            clearInterval(this.autoPlayInterval);
+            this.autoPlayInterval = null;
+        }
+    }
+
+    resetAutoPlay() {
+        this.stopAutoPlay();
+        this.startAutoPlay();
+    }
+}
+
+// ============================================
 // INICIALIZACIÓN
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -367,6 +480,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Inicializar calculadora personalizada
     const calculator = new CustomTicketCalculator();
+    
+    // Inicializar carrusel de imágenes
+    const carousel = new ImageCarousel();
     
     // Inicializar smooth scroll
     initSmoothScroll();
