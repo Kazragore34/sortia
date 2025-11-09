@@ -551,12 +551,12 @@ class ImageCarousel {
 }
 
 // ============================================
-// ANIMACIONES AL SCROLL (Entrada y salida)
+// ANIMACIONES AL SCROLL (Entrada y salida) - OPTIMIZADO
 // ============================================
 function initScrollAnimations() {
     const observerOptions = {
-        threshold: [0, 0.1, 0.5, 1],
-        rootMargin: '0px 0px -50px 0px'
+        threshold: 0.15,
+        rootMargin: '0px 0px -100px 0px'
     };
 
     const observer = new IntersectionObserver((entries) => {
@@ -574,55 +574,19 @@ function initScrollAnimations() {
         });
     }, observerOptions);
 
-    // Observar todos los elementos con la clase animate-on-scroll
-    document.querySelectorAll('.animate-on-scroll').forEach(element => {
+    // Observar todos los elementos con clases de animación
+    document.querySelectorAll('.animate-on-scroll, .animate-from-right, .animate-from-left').forEach(element => {
         observer.observe(element);
     });
 }
 
 // ============================================
-// EFECTO PARALLAX (Solo para imagen de fondo del hero)
+// EFECTO PARALLAX (Simplificado - solo si es necesario)
 // ============================================
 function initParallax() {
-    let ticking = false;
-
-    function updateParallax() {
-        const scrollY = window.pageYOffset;
-        
-        // Solo aplicar parallax a la imagen de fondo del hero
-        const heroBgImage = document.querySelector('.hero-background-image');
-        if (heroBgImage) {
-            const heroSection = heroBgImage.closest('section');
-            if (heroSection) {
-                const rect = heroSection.getBoundingClientRect();
-                const windowHeight = window.innerHeight;
-                
-                // Calcular el parallax solo cuando la sección está visible
-                if (rect.bottom >= 0 && rect.top <= windowHeight) {
-                    const parallaxSpeed = 0.5;
-                    const yPos = scrollY * parallaxSpeed;
-                    heroBgImage.style.transform = `translateY(${yPos}px)`;
-                    heroBgImage.style.willChange = 'transform';
-                } else {
-                    // Resetear cuando está fuera del viewport
-                    heroBgImage.style.transform = 'translateY(0px)';
-                }
-            }
-        }
-
-        ticking = false;
-    }
-
-    function requestTick() {
-        if (!ticking) {
-            window.requestAnimationFrame(updateParallax);
-            ticking = true;
-        }
-    }
-
-    window.addEventListener('scroll', requestTick, { passive: true });
-    window.addEventListener('resize', requestTick);
-    updateParallax(); // Ejecutar una vez al cargar
+    // Parallax desactivado por defecto - se puede activar si se necesita
+    // El efecto parallax puede causar problemas de rendimiento
+    return;
 }
 
 // ============================================
@@ -647,8 +611,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar animaciones al scroll
     initScrollAnimations();
     
-    // Inicializar efecto parallax
-    initParallax();
+    // Parallax desactivado para mejor rendimiento
+    // initParallax();
     
     // Inicializar compra de tickets
     initTicketPurchase();

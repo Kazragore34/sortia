@@ -309,6 +309,8 @@ h1, h2, h3, h4, h5, h6 {
     object-position: center;
     transition: opacity 0.5s ease-in-out;
     pointer-events: none;
+    transform: translateZ(0); /* Aceleración por hardware */
+    will-change: opacity;
 }
 
 .carousel-image.opacity-100 {
@@ -355,6 +357,8 @@ img {
     animation: none !important;
     will-change: auto;
     opacity: 0.6 !important;
+    transform: translateZ(0); /* Aceleración por hardware */
+    backface-visibility: hidden;
 }
 
 .hero-background-overlay {
@@ -364,28 +368,26 @@ img {
 }
 
 /* ============================================
-   FONDOS Y PATRONES
+   FONDOS Y PATRONES (Optimizado)
    ============================================ */
 .background-pattern {
     background-image: 
-        radial-gradient(circle at 20% 50%, rgba(73, 80, 87, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(73, 80, 87, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 40% 20%, rgba(73, 80, 87, 0.04) 0%, transparent 50%),
-        radial-gradient(circle at 60% 40%, rgba(108, 117, 125, 0.03) 0%, transparent 50%),
-        linear-gradient(135deg, transparent 0%, rgba(233, 236, 239, 0.15) 50%, transparent 100%),
-        linear-gradient(45deg, rgba(248, 249, 250, 0.5) 25%, transparent 25%, transparent 75%, rgba(248, 249, 250, 0.5) 75%),
-        linear-gradient(45deg, rgba(248, 249, 250, 0.5) 25%, transparent 25%, transparent 75%, rgba(248, 249, 250, 0.5) 75%);
-    background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 200% 200%, 60px 60px, 60px 60px;
-    background-position: 0% 0%, 100% 100%, 50% 50%, 60% 40%, 0% 0%, 0 0, 30px 30px;
-    animation: backgroundMove 25s ease-in-out infinite;
+        radial-gradient(circle at 20% 50%, rgba(73, 80, 87, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(73, 80, 87, 0.03) 0%, transparent 50%),
+        linear-gradient(135deg, transparent 0%, rgba(233, 236, 239, 0.1) 50%, transparent 100%);
+    background-size: 100% 100%, 100% 100%, 200% 200%;
+    background-position: 0% 0%, 100% 100%, 0% 0%;
+    /* Animación simplificada para mejor rendimiento */
+    animation: backgroundMove 30s ease-in-out infinite;
+    will-change: background-position;
 }
 
 @keyframes backgroundMove {
     0%, 100% {
-        background-position: 0% 0%, 100% 100%, 50% 50%, 60% 40%, 0% 0%, 0 0, 30px 30px;
+        background-position: 0% 0%, 100% 100%, 0% 0%;
     }
     50% {
-        background-position: 100% 100%, 0% 0%, 50% 50%, 40% 60%, 100% 100%, 30px 30px, 0 0;
+        background-position: 100% 100%, 0% 0%, 100% 100%;
     }
 }
 
@@ -394,8 +396,8 @@ img {
    ============================================ */
 .animate-on-scroll {
     opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    transform: translateY(50px);
+    transition: opacity 1.2s ease-out, transform 1.2s ease-out;
 }
 
 .animate-on-scroll.animated {
@@ -411,33 +413,50 @@ img {
 
 /* Animaciones escalonadas */
 .animate-on-scroll.delay-100 {
-    transition-delay: 0.1s;
+    transition-delay: 0.15s;
 }
 
 .animate-on-scroll.delay-200 {
-    transition-delay: 0.2s;
-}
-
-.animate-on-scroll.delay-300 {
     transition-delay: 0.3s;
 }
 
+.animate-on-scroll.delay-300 {
+    transition-delay: 0.45s;
+}
+
 .animate-on-scroll.delay-400 {
-    transition-delay: 0.4s;
+    transition-delay: 0.6s;
 }
 
-/* ============================================
-   EFECTO PARALLAX
-   ============================================ */
-.parallax-section {
-    position: relative;
-    overflow: hidden;
+.animate-on-scroll.delay-500 {
+    transition-delay: 0.75s;
 }
 
-.parallax-element {
-    will-change: transform;
-    transition: transform 0.1s ease-out;
+/* Animación desde la derecha */
+.animate-from-right {
+    opacity: 0;
+    transform: translateX(80px);
+    transition: opacity 1.2s ease-out, transform 1.2s ease-out;
 }
+
+.animate-from-right.animated {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Animación desde la izquierda */
+.animate-from-left {
+    opacity: 0;
+    transform: translateX(-80px);
+    transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+}
+
+.animate-from-left.animated {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Parallax removido para mejor rendimiento */
 
 /* ============================================
    CONTENT BOXES
