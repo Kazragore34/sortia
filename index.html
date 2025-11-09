@@ -152,27 +152,27 @@
                 <p class="text-xl text-ceramic-600">Una moto de ensueño esperando por ti</p>
             </div>
             
-            <div class="grid md:grid-cols-2 gap-12 items-center">
-                <div class="order-2 md:order-1">
-                    <div class="bg-gradient-to-br from-ceramic-50 to-ceramic-100 rounded-2xl p-8 shadow-xl border border-ceramic-200">
+            <div class="grid md:grid-cols-5 gap-8 items-start">
+                <div class="order-2 md:order-1 md:col-span-3">
+                    <div class="bg-gradient-to-br from-ceramic-50 to-ceramic-100 rounded-2xl p-6 md:p-8 shadow-xl border border-ceramic-200">
                         <!-- Carrusel de imágenes de la moto -->
                         <div class="relative mb-6 rounded-xl overflow-hidden bg-ceramic-100">
-                            <div id="moto-carousel" class="relative aspect-square">
+                            <div id="moto-carousel" class="relative aspect-[4/3]">
                                 <img src="images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-002-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-100 p-4">
+                                     class="carousel-image opacity-100">
                                 <img src="images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-004-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-0 p-4">
+                                     class="carousel-image opacity-0">
                                 <img src="images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-006-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-0 p-4">
+                                     class="carousel-image opacity-0">
                                 <img src="images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-007-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-0 p-4">
+                                     class="carousel-image opacity-0">
                                 <img src="images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-008-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-0 p-4">
+                                     class="carousel-image opacity-0">
                             </div>
                             <!-- Botones de navegación del carrusel -->
                             <button id="carousel-prev" class="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-ceramic-800 rounded-full p-2 shadow-lg transition z-10">
@@ -219,18 +219,20 @@
                     </div>
                 </div>
                 
-                <div class="order-1 md:order-2">
-                    <h3 class="text-3xl font-display font-bold text-ceramic-900 mb-6">¿Cómo se elige al ganador?</h3>
-                    <p class="text-lg text-ceramic-700 mb-6 leading-relaxed">
-                        El sorteo se realizará basándose en los números de la <strong>Lotería de Navidad 2025</strong>. 
-                        El ganador será determinado por las <strong>últimas 3 cifras</strong> del número premiado.
-                    </p>
-                    <div class="bg-ceramic-50 rounded-xl p-6 border border-ceramic-200">
-                        <p class="text-ceramic-800 font-semibold mb-2">📋 Ejemplo:</p>
-                        <p class="text-ceramic-700">
-                            Si el número de la Lotería de Navidad termina en <strong>123</strong>, 
-                            el ticket ganador será el <strong>123</strong>.
+                <div class="order-1 md:order-2 md:col-span-2">
+                    <div class="sticky top-24">
+                        <h3 class="text-2xl md:text-3xl font-display font-bold text-ceramic-900 mb-4 md:mb-6">¿Cómo se elige al ganador?</h3>
+                        <p class="text-base md:text-lg text-ceramic-700 mb-4 md:mb-6 leading-relaxed">
+                            El sorteo se realizará basándose en los números de la <strong>Lotería de Navidad 2025</strong>. 
+                            El ganador será determinado por las <strong>últimas 3 cifras</strong> del número premiado.
                         </p>
+                        <div class="bg-ceramic-50 rounded-xl p-4 md:p-6 border border-ceramic-200">
+                            <p class="text-ceramic-800 font-semibold mb-2">📋 Ejemplo:</p>
+                            <p class="text-ceramic-700 text-sm md:text-base">
+                                Si el número de la Lotería de Navidad termina en <strong>123</strong>, 
+                                el ticket ganador será el <strong>123</strong>.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
