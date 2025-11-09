@@ -162,7 +162,7 @@
                 <!-- Columna Izquierda: Carrusel y Especificaciones -->
                 <div class="order-2 md:order-1 space-y-6">
                     <!-- Carrusel de imágenes de la moto -->
-                    <div class="bg-gradient-to-br from-ceramic-50 to-ceramic-100 rounded-2xl p-6 md:p-8 shadow-xl border border-ceramic-200 animate-on-scroll no-shimmer">
+                    <div class="bg-gradient-to-br from-ceramic-50 to-ceramic-100 rounded-2xl p-6 md:p-8 shadow-xl border border-ceramic-200 animate-on-scroll">
                         <div class="relative rounded-xl overflow-hidden" style="background: #ffffff; position: relative; aspect-ratio: 16/9;">
                             <!-- Contenedor del carrusel -->
                             <div id="moto-carousel" class="relative" style="width: 100%; height: 100%; background: #ffffff; position: relative; aspect-ratio: 16/9;">
@@ -524,6 +524,150 @@
         </div>
     </section>
 
+    <!-- ============================================ -->
+    <!-- CARRUSEL DE PRUEBA INDEPENDIENTE -->
+    <!-- ============================================ -->
+    <section class="py-16 px-4" style="background: #ff0000 !important; border: 5px solid #000000 !important; margin: 50px 0;">
+        <div class="container mx-auto max-w-4xl">
+            <h2 class="text-4xl font-bold text-center mb-8" style="color: #ffffff !important; text-shadow: 2px 2px 4px #000000;">🧪 CARRUSEL DE PRUEBA (INDEPENDIENTE) 🧪</h2>
+            
+            <div id="test-carousel-container" style="position: relative; width: 100%; height: 500px; background: #f0f0f0; border: 5px solid #000000; overflow: hidden;">
+                <!-- Imágenes del carrusel de prueba -->
+                <img src="images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-002-03.jpg" 
+                     alt="Test 1" 
+                     class="test-carousel-img"
+                     data-test-index="0"
+                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 1; z-index: 10; background: white;">
+                <img src="images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-004-03.jpg" 
+                     alt="Test 2" 
+                     class="test-carousel-img"
+                     data-test-index="1"
+                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 0; z-index: 1; background: white;">
+                <img src="images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-006-03.jpg" 
+                     alt="Test 3" 
+                     class="test-carousel-img"
+                     data-test-index="2"
+                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 0; z-index: 1; background: white;">
+                
+                <!-- Botones de prueba -->
+                <button id="test-carousel-prev" type="button" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.9); color: white; border: 3px solid white; border-radius: 50%; width: 60px; height: 60px; cursor: pointer; z-index: 100; font-size: 30px; font-weight: bold;">‹</button>
+                <button id="test-carousel-next" type="button" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.9); color: white; border: 3px solid white; border-radius: 50%; width: 60px; height: 60px; cursor: pointer; z-index: 100; font-size: 30px; font-weight: bold;">›</button>
+                
+                <!-- Indicadores de prueba -->
+                <div id="test-carousel-dots" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100;">
+                    <span class="test-carousel-dot" data-test-dot="0" style="width: 20px; height: 20px; border-radius: 50%; background: white; cursor: pointer; display: block; border: 3px solid #000;"></span>
+                    <span class="test-carousel-dot" data-test-dot="1" style="width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; display: block; border: 3px solid #000;"></span>
+                    <span class="test-carousel-dot" data-test-dot="2" style="width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; display: block; border: 3px solid #000;"></span>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+                <p style="color: #ffffff !important; font-size: 20px; font-weight: bold; text-shadow: 2px 2px 4px #000000;">Si este carrusel funciona, el problema es del CSS o del código principal.</p>
+                <p style="color: #ffff00 !important; font-size: 18px; font-weight: bold; text-shadow: 2px 2px 4px #000000;">Si NO funciona, el problema es del JavaScript o de la carga de imágenes.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- JavaScript inline para el carrusel de prueba -->
+    <script>
+    (function() {
+        console.log('🧪 ===== INICIANDO CARRUSEL DE PRUEBA =====');
+        
+        const testImages = document.querySelectorAll('.test-carousel-img');
+        const testDots = document.querySelectorAll('.test-carousel-dot');
+        const testPrevBtn = document.getElementById('test-carousel-prev');
+        const testNextBtn = document.getElementById('test-carousel-next');
+        
+        let testCurrentIndex = 0;
+        
+        console.log('🧪 Imágenes encontradas:', testImages.length);
+        console.log('🧪 Dots encontrados:', testDots.length);
+        console.log('🧪 Botón prev:', testPrevBtn ? '✅' : '❌');
+        console.log('🧪 Botón next:', testNextBtn ? '✅' : '❌');
+        
+        function testShowImage(index) {
+            if (testImages.length === 0) {
+                console.error('🧪 ❌ No hay imágenes');
+                return;
+            }
+            
+            if (index < 0) index = testImages.length - 1;
+            if (index >= testImages.length) index = 0;
+            
+            console.log('🧪 🖼️ Mostrando imagen', index + 1, 'de', testImages.length);
+            
+            testImages.forEach((img, i) => {
+                if (i === index) {
+                    img.style.opacity = '1';
+                    img.style.zIndex = '10';
+                    img.style.visibility = 'visible';
+                    img.style.display = 'block';
+                    console.log('🧪 ✅ Imagen', i + 1, 'ACTIVA - opacity:', img.style.opacity, 'z-index:', img.style.zIndex);
+                } else {
+                    img.style.opacity = '0';
+                    img.style.zIndex = '1';
+                    img.style.visibility = 'hidden';
+                    img.style.display = 'block';
+                }
+            });
+            
+            testDots.forEach((dot, i) => {
+                if (i === index) {
+                    dot.style.background = 'white';
+                    dot.style.width = '20px';
+                    dot.style.height = '20px';
+                } else {
+                    dot.style.background = 'rgba(255,255,255,0.5)';
+                    dot.style.width = '20px';
+                    dot.style.height = '20px';
+                }
+            });
+            
+            testCurrentIndex = index;
+        }
+        
+        if (testPrevBtn) {
+            testPrevBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🧪 ⬅️ Click en botón anterior');
+                testCurrentIndex = (testCurrentIndex - 1 + testImages.length) % testImages.length;
+                testShowImage(testCurrentIndex);
+            });
+        }
+        
+        if (testNextBtn) {
+            testNextBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🧪 ➡️ Click en botón siguiente');
+                testCurrentIndex = (testCurrentIndex + 1) % testImages.length;
+                testShowImage(testCurrentIndex);
+            });
+        }
+        
+        testDots.forEach((dot, index) => {
+            dot.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🧪 🔘 Click en dot', index);
+                testShowImage(index);
+            });
+        });
+        
+        // Mostrar primera imagen
+        testShowImage(0);
+        
+        // Auto-play cada 3 segundos
+        setInterval(function() {
+            testCurrentIndex = (testCurrentIndex + 1) % testImages.length;
+            testShowImage(testCurrentIndex);
+        }, 3000);
+        
+        console.log('🧪 ✅ ===== CARRUSEL DE PRUEBA INICIALIZADO =====');
+    })();
+    </script>
+
     <!-- Footer -->
     <footer class="bg-ceramic-900 text-white py-12 px-4">
         <div class="container mx-auto max-w-6xl">
@@ -614,150 +758,6 @@
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
         </svg>
     </a>
-
-    <!-- ============================================ -->
-    <!-- CARRUSEL DE PRUEBA INDEPENDIENTE -->
-    <!-- ============================================ -->
-    <section class="py-16 px-4 bg-red-100 border-4 border-red-500" style="margin-top: 100px;">
-        <div class="container mx-auto max-w-4xl">
-            <h2 class="text-3xl font-bold text-center mb-8 text-red-800">🧪 CARRUSEL DE PRUEBA (INDEPENDIENTE)</h2>
-            
-            <div id="test-carousel-container" style="position: relative; width: 100%; height: 500px; background: #f0f0f0; border: 3px solid #333; overflow: hidden;">
-                <!-- Imágenes del carrusel de prueba -->
-                <img src="images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-002-03.jpg" 
-                     alt="Test 1" 
-                     class="test-carousel-img"
-                     data-test-index="0"
-                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 1; z-index: 10; background: white;">
-                <img src="images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-004-03.jpg" 
-                     alt="Test 2" 
-                     class="test-carousel-img"
-                     data-test-index="1"
-                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 0; z-index: 1; background: white;">
-                <img src="images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-006-03.jpg" 
-                     alt="Test 3" 
-                     class="test-carousel-img"
-                     data-test-index="2"
-                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 0; z-index: 1; background: white;">
-                
-                <!-- Botones de prueba -->
-                <button id="test-carousel-prev" type="button" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.8); color: white; border: none; border-radius: 50%; width: 50px; height: 50px; cursor: pointer; z-index: 100; font-size: 24px; font-weight: bold;">‹</button>
-                <button id="test-carousel-next" type="button" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.8); color: white; border: none; border-radius: 50%; width: 50px; height: 50px; cursor: pointer; z-index: 100; font-size: 24px; font-weight: bold;">›</button>
-                
-                <!-- Indicadores de prueba -->
-                <div id="test-carousel-dots" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100;">
-                    <span class="test-carousel-dot" data-test-dot="0" style="width: 15px; height: 15px; border-radius: 50%; background: white; cursor: pointer; display: block; border: 2px solid #333;"></span>
-                    <span class="test-carousel-dot" data-test-dot="1" style="width: 15px; height: 15px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; display: block; border: 2px solid #333;"></span>
-                    <span class="test-carousel-dot" data-test-dot="2" style="width: 15px; height: 15px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; display: block; border: 2px solid #333;"></span>
-                </div>
-            </div>
-            
-            <div class="mt-4 text-center">
-                <p class="text-red-700 font-bold">Si este carrusel funciona, el problema es del CSS o del código principal.</p>
-                <p class="text-red-600">Si NO funciona, el problema es del JavaScript o de la carga de imágenes.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- JavaScript inline para el carrusel de prueba -->
-    <script>
-    (function() {
-        console.log('🧪 ===== INICIANDO CARRUSEL DE PRUEBA =====');
-        
-        const testImages = document.querySelectorAll('.test-carousel-img');
-        const testDots = document.querySelectorAll('.test-carousel-dot');
-        const testPrevBtn = document.getElementById('test-carousel-prev');
-        const testNextBtn = document.getElementById('test-carousel-next');
-        
-        let testCurrentIndex = 0;
-        
-        console.log('🧪 Imágenes encontradas:', testImages.length);
-        console.log('🧪 Dots encontrados:', testDots.length);
-        console.log('🧪 Botón prev:', testPrevBtn ? '✅' : '❌');
-        console.log('🧪 Botón next:', testNextBtn ? '✅' : '❌');
-        
-        function testShowImage(index) {
-            if (testImages.length === 0) {
-                console.error('🧪 ❌ No hay imágenes');
-                return;
-            }
-            
-            if (index < 0) index = testImages.length - 1;
-            if (index >= testImages.length) index = 0;
-            
-            console.log('🧪 🖼️ Mostrando imagen', index + 1, 'de', testImages.length);
-            
-            testImages.forEach((img, i) => {
-                if (i === index) {
-                    img.style.opacity = '1';
-                    img.style.zIndex = '10';
-                    img.style.visibility = 'visible';
-                    img.style.display = 'block';
-                    console.log('🧪 ✅ Imagen', i + 1, 'ACTIVA - opacity:', img.style.opacity, 'z-index:', img.style.zIndex);
-                } else {
-                    img.style.opacity = '0';
-                    img.style.zIndex = '1';
-                    img.style.visibility = 'hidden';
-                    img.style.display = 'block';
-                }
-            });
-            
-            testDots.forEach((dot, i) => {
-                if (i === index) {
-                    dot.style.background = 'white';
-                    dot.style.width = '15px';
-                    dot.style.height = '15px';
-                } else {
-                    dot.style.background = 'rgba(255,255,255,0.5)';
-                    dot.style.width = '15px';
-                    dot.style.height = '15px';
-                }
-            });
-            
-            testCurrentIndex = index;
-        }
-        
-        if (testPrevBtn) {
-            testPrevBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('🧪 ⬅️ Click en botón anterior');
-                testCurrentIndex = (testCurrentIndex - 1 + testImages.length) % testImages.length;
-                testShowImage(testCurrentIndex);
-            });
-        }
-        
-        if (testNextBtn) {
-            testNextBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('🧪 ➡️ Click en botón siguiente');
-                testCurrentIndex = (testCurrentIndex + 1) % testImages.length;
-                testShowImage(testCurrentIndex);
-            });
-        }
-        
-        testDots.forEach((dot, index) => {
-            dot.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('🧪 🔘 Click en dot', index);
-                testShowImage(index);
-            });
-        });
-        
-        // Mostrar primera imagen
-        testShowImage(0);
-        
-        // Auto-play cada 3 segundos
-        setInterval(function() {
-            testCurrentIndex = (testCurrentIndex + 1) % testImages.length;
-            testShowImage(testCurrentIndex);
-        }, 3000);
-        
-        console.log('🧪 ✅ ===== CARRUSEL DE PRUEBA INICIALIZADO =====');
-    })();
-    </script>
 
     <!-- JavaScript -->
     <script src="js/main.js"></script>
