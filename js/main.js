@@ -10,7 +10,8 @@ const CONFIG = {
     deadline: new Date('2025-12-21T23:59:59'), // 21 de diciembre a media noche
     totalTickets: 999,
     ticketPrice: 8, // euros
-    minTickets: 2
+    minTickets: 2,
+    whatsappNumber: '722539447' // Número de WhatsApp
 };
 
 // ============================================
@@ -236,15 +237,122 @@ function handlePurchase(amount) {
         return;
     }
 
+    // Abrir modal de compra
+    openPurchaseModal(amount);
+}
+
+// ============================================
+// MODAL DE COMPRA
+// ============================================
+function openPurchaseModal(amount) {
+    const modal = document.getElementById('purchase-modal');
+    const ticketAmount = document.getElementById('modal-ticket-amount');
+    const totalDisplay = document.getElementById('modal-total');
+    
+    if (!modal || !ticketAmount || !totalDisplay) return;
+    
     const total = amount * CONFIG.ticketPrice;
+    ticketAmount.textContent = amount;
+    totalDisplay.textContent = `${total}€`;
     
-    // Aquí iría la integración con el sistema de pago
-    console.log(`Comprando ${amount} tickets por ${total}€`);
+    // Limpiar campos del formulario
+    document.getElementById('customer-name').value = '';
+    document.getElementById('customer-lastname').value = '';
+    document.getElementById('customer-phone').value = '';
     
-    // En producción, aquí redirigirías a la pasarela de pago
-    alert(`Redirigiendo a la pasarela de pago para ${amount} tickets (${total}€)`);
+    // Mostrar modal
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePurchaseModal() {
+    const modal = document.getElementById('purchase-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+}
+
+function initPurchaseModal() {
+    const modal = document.getElementById('purchase-modal');
+    const closeBtn = document.getElementById('close-modal');
+    const sendBtn = document.getElementById('send-whatsapp');
     
-    // Ejemplo: window.location.href = `/checkout?tickets=${amount}`;
+    // Cerrar al hacer click fuera del modal
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closePurchaseModal();
+            }
+        });
+    }
+    
+    // Botón cerrar
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closePurchaseModal);
+    }
+    
+    // Botón enviar a WhatsApp
+    if (sendBtn) {
+        sendBtn.addEventListener('click', function() {
+            const name = document.getElementById('customer-name').value.trim();
+            const lastname = document.getElementById('customer-lastname').value.trim();
+            const phone = document.getElementById('customer-phone').value.trim();
+            const ticketAmount = document.getElementById('modal-ticket-amount').textContent;
+            const total = document.getElementById('modal-total').textContent;
+            
+            // Validar campos
+            if (!name || !lastname || !phone) {
+                alert('Por favor, completa todos los campos obligatorios.');
+                return;
+            }
+            
+            // Validar teléfono (básico)
+            if (phone.length < 9) {
+                alert('Por favor, ingresa un número de teléfono válido.');
+                return;
+            }
+            
+            // Generar y abrir link de WhatsApp
+            generateWhatsAppLink(name, lastname, phone, ticketAmount, total);
+        });
+    }
+    
+    // Cerrar con ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closePurchaseModal();
+        }
+    });
+}
+
+// ============================================
+// GENERAR LINK DE WHATSAPP
+// ============================================
+function generateWhatsAppLink(name, lastname, phone, ticketAmount, total) {
+    const message = `¡Hola! Me interesa participar en el sorteo de la Yamaha NMAX.
+
+📋 *Información de la compra:*
+• Cantidad de tickets: ${ticketAmount}
+• Total a pagar: ${total}
+
+👤 *Mis datos:*
+• Nombre: ${name} ${lastname}
+• Teléfono: ${phone}
+
+Por favor, confírmame la disponibilidad y cómo proceder con el pago. ¡Gracias!`;
+
+    // Codificar el mensaje para URL
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${CONFIG.whatsappNumber}?text=${encodedMessage}`;
+    
+    // Abrir WhatsApp en nueva pestaña
+    window.open(whatsappUrl, '_blank');
+    
+    // Cerrar modal después de un breve delay
+    setTimeout(() => {
+        closePurchaseModal();
+    }, 500);
 }
 
 // ============================================
@@ -268,6 +376,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Inicializar compra de tickets
     initTicketPurchase();
+    
+    // Inicializar modal de compra
+    initPurchaseModal();
     
     console.log('✅ Sortia Landing Page inicializada correctamente');
 });

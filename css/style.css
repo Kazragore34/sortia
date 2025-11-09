@@ -249,3 +249,46 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
+/* Modal Styles */
+#purchase-modal {
+    backdrop-filter: blur(4px);
+}
+
+#purchase-modal > div {
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Botón Flotante WhatsApp */
+.fixed.bottom-6.left-6 {
+    box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4);
+}
+
+.fixed.bottom-6.left-6:hover {
+    box-shadow: 0 15px 35px rgba(34, 197, 94, 0.5);
+}
+
+/* Responsive para botón flotante */
+@media (max-width: 640px) {
+    .fixed.bottom-6.left-6 {
+        bottom: 1rem;
+        left: 1rem;
+        padding: 0.75rem;
+    }
+    
+    .fixed.bottom-6.left-6 svg {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+}
+
