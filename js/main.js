@@ -86,27 +86,80 @@ class TicketsCounter {
     constructor(totalTickets) {
         this.totalTickets = totalTickets;
         this.soldTickets = 0; // Esto debería venir de una API en producción
+        this.currentDisplay = 0; // Valor actual mostrado (para animación)
         this.elements = {
             remaining: document.getElementById('tickets-remaining'),
             progress: document.getElementById('tickets-progress')
         };
+        this.animationFrame = null;
         this.init();
     }
 
     init() {
+        // Iniciar en 0
+        this.currentDisplay = 0;
+        this.soldTickets = 0;
+        
         // Simulación: En producción esto vendría de una API
-        this.soldTickets = Math.floor(Math.random() * 200); // Simulación
-        this.update();
+        // Por ahora, usar un valor de ejemplo. Luego se conectará a Excel
+        const targetSold = Math.floor(Math.random() * 200); // Simulación
+        
+        // Animar desde 0 hasta el valor objetivo
+        this.animateToValue(targetSold);
         
         // Simular ventas aleatorias (solo para demo)
         // En producción, esto se actualizaría desde el servidor
         // setInterval(() => this.simulateSale(), 5000);
     }
 
+    animateToValue(targetSold) {
+        this.soldTickets = targetSold;
+        const targetRemaining = Math.max(0, this.totalTickets - targetSold);
+        const targetPercentage = (targetSold / this.totalTickets) * 100;
+        const startValue = 0;
+        const duration = 2000; // 2 segundos
+        const startTime = performance.now();
+
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Easing function (ease-out)
+            const easeOut = 1 - Math.pow(1 - progress, 3);
+            
+            // Calcular valor actual
+            const currentRemaining = Math.floor(startValue + (targetRemaining - startValue) * easeOut);
+            const currentPercentage = 100 - ((targetSold / this.totalTickets) * 100 * easeOut);
+
+            // Actualizar display
+            if (this.elements.remaining) {
+                this.elements.remaining.textContent = currentRemaining;
+            }
+
+            if (this.elements.progress) {
+                this.elements.progress.style.width = `${currentPercentage}%`;
+            }
+
+            if (progress < 1) {
+                this.animationFrame = requestAnimationFrame(animate);
+            } else {
+                // Asegurar valores finales exactos
+                if (this.elements.remaining) {
+                    this.elements.remaining.textContent = targetRemaining;
+                }
+                if (this.elements.progress) {
+                    this.elements.progress.style.width = `${100 - targetPercentage}%`;
+                }
+            }
+        };
+
+        this.animationFrame = requestAnimationFrame(animate);
+    }
+
     simulateSale() {
         if (this.soldTickets < this.totalTickets) {
-            this.soldTickets += Math.floor(Math.random() * 3) + 1;
-            this.update();
+            const newSold = this.soldTickets + Math.floor(Math.random() * 3) + 1;
+            this.animateToValue(newSold);
         }
     }
 
@@ -498,11 +551,11 @@ class ImageCarousel {
 }
 
 // ============================================
-// ANIMACIONES AL SCROLL
+// ANIMACIONES AL SCROLL (Entrada y salida)
 // ============================================
 function initScrollAnimations() {
     const observerOptions = {
-        threshold: 0.1,
+        threshold: [0, 0.1, 0.5, 1],
         rootMargin: '0px 0px -50px 0px'
     };
 
@@ -510,7 +563,13 @@ function initScrollAnimations() {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animated');
-                observer.unobserve(entry.target);
+                entry.target.classList.remove('animated-out');
+            } else {
+                // Cuando sale del viewport, añadir clase de salida
+                if (entry.target.classList.contains('animated')) {
+                    entry.target.classList.add('animated-out');
+                    entry.target.classList.remove('animated');
+                }
             }
         });
     }, observerOptions);
@@ -522,52 +581,34 @@ function initScrollAnimations() {
 }
 
 // ============================================
-// EFECTO PARALLAX
+// EFECTO PARALLAX (Solo para imagen de fondo del hero)
 // ============================================
 function initParallax() {
-    const parallaxElements = document.querySelectorAll('.parallax-element');
-    const parallaxSections = document.querySelectorAll('.parallax-section');
-    
     let ticking = false;
 
     function updateParallax() {
         const scrollY = window.pageYOffset;
         
-        // Parallax para elementos individuales
-        parallaxElements.forEach(element => {
-            const rect = element.getBoundingClientRect();
-            const elementTop = rect.top + scrollY;
-            const elementHeight = rect.height;
-            const windowHeight = window.innerHeight;
-            
-            // Calcular si el elemento está visible
-            if (rect.bottom >= 0 && rect.top <= windowHeight) {
-                const scrolled = scrollY - (elementTop - windowHeight);
-                const parallaxSpeed = 0.3;
-                const yPos = -(scrolled * parallaxSpeed);
-                element.style.transform = `translateY(${yPos}px)`;
-            }
-        });
-
-        // Parallax para secciones
-        parallaxSections.forEach(section => {
-            const rect = section.getBoundingClientRect();
-            const sectionTop = rect.top;
-            const sectionHeight = rect.height;
-            const windowHeight = window.innerHeight;
-            
-            if (rect.bottom >= 0 && rect.top <= windowHeight) {
-                const scrolled = sectionTop;
-                const parallaxSpeed = 0.5;
-                const yPos = scrolled * parallaxSpeed;
+        // Solo aplicar parallax a la imagen de fondo del hero
+        const heroBgImage = document.querySelector('.hero-background-image');
+        if (heroBgImage) {
+            const heroSection = heroBgImage.closest('section');
+            if (heroSection) {
+                const rect = heroSection.getBoundingClientRect();
+                const windowHeight = window.innerHeight;
                 
-                // Aplicar parallax a elementos de fondo dentro de la sección
-                const bgElements = section.querySelectorAll('.hero-background-image');
-                bgElements.forEach(bg => {
-                    bg.style.transform = `translateY(${yPos * 0.3}px)`;
-                });
+                // Calcular el parallax solo cuando la sección está visible
+                if (rect.bottom >= 0 && rect.top <= windowHeight) {
+                    const parallaxSpeed = 0.5;
+                    const yPos = scrollY * parallaxSpeed;
+                    heroBgImage.style.transform = `translateY(${yPos}px)`;
+                    heroBgImage.style.willChange = 'transform';
+                } else {
+                    // Resetear cuando está fuera del viewport
+                    heroBgImage.style.transform = 'translateY(0px)';
+                }
             }
-        });
+        }
 
         ticking = false;
     }
@@ -579,7 +620,7 @@ function initParallax() {
         }
     }
 
-    window.addEventListener('scroll', requestTick);
+    window.addEventListener('scroll', requestTick, { passive: true });
     window.addEventListener('resize', requestTick);
     updateParallax(); // Ejecutar una vez al cargar
 }
@@ -631,4 +672,3 @@ function formatCurrency(amount) {
 function formatNumber(number) {
     return new Intl.NumberFormat('es-ES').format(number);
 }
-

@@ -132,10 +132,10 @@
                 <div class="max-w-md mx-auto mb-8 animate-on-scroll">
                     <div class="bg-gradient-to-r from-ceramic-600 to-ceramic-500 rounded-xl p-6 text-white shadow-lg content-box">
                         <p class="text-lg font-semibold mb-2">Tickets Disponibles</p>
-                        <div class="text-4xl font-display font-bold mb-2" id="tickets-remaining">1000</div>
+                        <div class="text-4xl font-display font-bold mb-2" id="tickets-remaining">0</div>
                         <p class="text-sm opacity-90">de 1000 tickets totales</p>
                         <div class="mt-4 bg-white/20 rounded-full h-2">
-                            <div class="bg-white rounded-full h-2 transition-all duration-500" id="tickets-progress" style="width: 100%"></div>
+                            <div class="bg-white rounded-full h-2 transition-all duration-500" id="tickets-progress" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -162,7 +162,7 @@
                     <!-- Carrusel de imágenes de la moto -->
                     <div class="content-box bg-gradient-to-br from-ceramic-50 to-ceramic-100 rounded-2xl p-6 md:p-8 shadow-xl border border-ceramic-200 animate-on-scroll">
                         <div class="relative rounded-xl overflow-hidden bg-ceramic-100">
-                            <div id="moto-carousel" class="relative aspect-[3/2] parallax-element">
+                            <div id="moto-carousel" class="relative aspect-[3/2]">
                                 <img src="images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-002-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
                                      class="carousel-image opacity-100">
@@ -365,16 +365,17 @@
     </section>
 
     <!-- Cómo Funciona Section -->
-    <section id="como-funciona" class="py-20 px-4 bg-white">
-        <div class="container mx-auto max-w-6xl">
-            <div class="text-center mb-12">
+    <section id="como-funciona" class="py-20 px-4 relative">
+        <div class="absolute inset-0 background-pattern opacity-25"></div>
+        <div class="container mx-auto max-w-6xl relative z-10">
+            <div class="text-center mb-12 animate-on-scroll">
                 <h2 class="text-4xl md:text-5xl font-display font-bold text-ceramic-900 mb-4">CÓMO FUNCIONA</h2>
                 <p class="text-xl text-ceramic-600">Proceso simple y transparente</p>
             </div>
 
             <div class="grid md:grid-cols-3 gap-8">
-                <div class="text-center">
-                    <div class="w-20 h-20 bg-ceramic-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div class="text-center content-box bg-white rounded-2xl p-6 shadow-lg border border-ceramic-200 animate-on-scroll">
+                    <div class="w-20 h-20 bg-ceramic-800 rounded-full flex items-center justify-center mx-auto mb-6 animate-pop">
                         <span class="text-white text-3xl font-bold">1</span>
                     </div>
                     <h3 class="text-2xl font-display font-bold text-ceramic-900 mb-4">Compra tus Tickets</h3>
@@ -383,8 +384,8 @@
                     </p>
                 </div>
 
-                <div class="text-center">
-                    <div class="w-20 h-20 bg-ceramic-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div class="text-center content-box bg-white rounded-2xl p-6 shadow-lg border border-ceramic-200 animate-on-scroll delay-200">
+                    <div class="w-20 h-20 bg-ceramic-800 rounded-full flex items-center justify-center mx-auto mb-6 animate-pop">
                         <span class="text-white text-3xl font-bold">2</span>
                     </div>
                     <h3 class="text-2xl font-display font-bold text-ceramic-900 mb-4">Recibe tus Números</h3>
@@ -393,8 +394,8 @@
                     </p>
                 </div>
 
-                <div class="text-center">
-                    <div class="w-20 h-20 bg-ceramic-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div class="text-center content-box bg-white rounded-2xl p-6 shadow-lg border border-ceramic-200 animate-on-scroll delay-400">
+                    <div class="w-20 h-20 bg-ceramic-800 rounded-full flex items-center justify-center mx-auto mb-6 animate-pop">
                         <span class="text-white text-3xl font-bold">3</span>
                     </div>
                     <h3 class="text-2xl font-display font-bold text-ceramic-900 mb-4">Espera el Sorteo</h3>
