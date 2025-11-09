@@ -409,13 +409,20 @@ class ImageCarousel {
     init() {
         // Esperar a que el DOM esté listo
         setTimeout(() => {
-            this.images = Array.from(document.querySelectorAll('.carousel-image'));
+            this.images = Array.from(document.querySelectorAll('.moto-carousel-img'));
             this.dots = Array.from(document.querySelectorAll('.carousel-dot'));
             this.prevBtn = document.getElementById('carousel-prev');
             this.nextBtn = document.getElementById('carousel-next');
 
+            console.log('🔍 Inicializando carrusel principal...');
+            console.log('📸 Imágenes encontradas:', this.images.length);
+            console.log('🔘 Dots encontrados:', this.dots.length);
+            console.log('⬅️ Botón prev:', this.prevBtn ? '✅' : '❌');
+            console.log('➡️ Botón next:', this.nextBtn ? '✅' : '❌');
+
             if (this.images.length === 0) {
-                console.warn('No se encontraron imágenes del carrusel');
+                console.error('❌ ERROR: No se encontraron imágenes del carrusel');
+                console.log('Buscando elementos con clase .moto-carousel-img...');
                 return;
             }
 
@@ -462,48 +469,57 @@ class ImageCarousel {
                 carousel.addEventListener('mouseleave', () => this.startAutoPlay());
             }
 
-            console.log('✅ Carrusel inicializado con', this.images.length, 'imágenes');
+            console.log('✅ ===== CARRUSEL PRINCIPAL INICIALIZADO =====');
+            console.log(`📸 Total de imágenes: ${this.images.length}`);
+            console.log(`🔘 Total de dots: ${this.dots.length}`);
         }, 100);
     }
 
     showImage(index) {
-        if (this.images.length === 0) return;
+        if (this.images.length === 0) {
+            console.warn('⚠️ No hay imágenes para mostrar');
+            return;
+        }
 
         // Asegurar que el índice sea válido
         if (index < 0) index = this.images.length - 1;
         if (index >= this.images.length) index = 0;
 
-        // Ocultar todas las imágenes
+        console.log(`🖼️ Cambiando a imagen ${index + 1} de ${this.images.length}`);
+
+        // Cambiar todas las imágenes usando estilos inline (como el carrusel de prueba)
         this.images.forEach((img, i) => {
             if (i === index) {
-                img.classList.remove('opacity-0');
-                img.classList.add('opacity-100');
+                // Imagen activa - VISIBLE
                 img.style.opacity = '1';
                 img.style.zIndex = '10';
+                img.style.visibility = 'visible';
+                img.style.display = 'block';
+                console.log(`✅ Imagen ${i + 1} ACTIVA`);
             } else {
-                img.classList.remove('opacity-100');
-                img.classList.add('opacity-0');
+                // Imágenes inactivas - OCULTAS
                 img.style.opacity = '0';
                 img.style.zIndex = '1';
+                img.style.visibility = 'hidden';
+                img.style.display = 'block';
             }
         });
 
         // Actualizar dots
         this.dots.forEach((dot, i) => {
             if (i === index) {
-                dot.classList.add('active-dot');
                 dot.style.background = 'white';
-                dot.style.width = '0.75rem';
-                dot.style.height = '0.75rem';
+                dot.style.width = '12px';
+                dot.style.height = '12px';
             } else {
-                dot.classList.remove('active-dot');
                 dot.style.background = 'rgba(255, 255, 255, 0.5)';
-                dot.style.width = '0.5rem';
-                dot.style.height = '0.5rem';
+                dot.style.width = '8px';
+                dot.style.height = '8px';
             }
         });
 
         this.currentIndex = index;
+        console.log(`✅ Imagen ${index + 1} mostrada correctamente`);
     }
 
     next() {
