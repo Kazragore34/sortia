@@ -1,0 +1,16 @@
+/*
+Theme Name: Sortia
+Theme URI: https://sortia.com
+Author: Sortia Team
+Author URI: https://sortia.com
+Description: Tema personalizado para Sortia - Landing page de sorteos premium. Diseñado específicamente para el sorteo de Yamaha NMAX 125cc 2025.
+Version: 1.0.0
+License: MIT
+License URI: https://opensource.org/licenses/MIT
+Text Domain: sortia
+Tags: custom, landing-page, sorteo, responsive, modern
+*/
+
+/* Importar estilos personalizados */
+@import url('css/style.css');
+
