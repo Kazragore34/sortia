@@ -21,11 +21,13 @@ function sortia_enqueue_scripts() {
     // Google Fonts
     wp_enqueue_style('google-fonts', 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap', array(), null);
     
-    // Custom CSS - con versión para evitar caché
-    wp_enqueue_style('sortia-style', get_template_directory_uri() . '/css/style.css', array(), time());
+    // Custom CSS - con versión para evitar caché (agregar ?v=timestamp)
+    $css_version = filemtime(get_template_directory() . '/css/style.css');
+    wp_enqueue_style('sortia-style', get_template_directory_uri() . '/css/style.css', array(), $css_version);
     
-    // Custom JavaScript - con versión para evitar caché
-    wp_enqueue_script('sortia-main', get_template_directory_uri() . '/js/main.js', array(), time(), true);
+    // Custom JavaScript - con versión para evitar caché (agregar ?v=timestamp)
+    $js_version = filemtime(get_template_directory() . '/js/main.js');
+    wp_enqueue_script('sortia-main', get_template_directory_uri() . '/js/main.js', array(), $js_version, true);
     
     // Tailwind Config
     wp_add_inline_script('tailwind-cdn', "
@@ -86,4 +88,20 @@ add_action('after_setup_theme', 'sortia_setup');
  * Remove WordPress version from head
  */
 remove_action('wp_head', 'wp_generator');
+
+/**
+ * Deshabilitar caché de LiteSpeed Cache para archivos JS/CSS del tema (solo desarrollo)
+ * Comentar esta función en producción
+ */
+function sortia_disable_litespeed_cache_for_theme_assets() {
+    // Deshabilitar caché de LiteSpeed Cache para archivos del tema
+    if (defined('LSCWP_V')) {
+        // Agregar headers para evitar caché
+        header('Cache-Control: no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+    }
+}
+// Descomentar la siguiente línea si necesitas deshabilitar la caché temporalmente
+// add_action('wp_enqueue_scripts', 'sortia_disable_litespeed_cache_for_theme_assets', 1);
 

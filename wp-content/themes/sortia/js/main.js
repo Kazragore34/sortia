@@ -1,6 +1,8 @@
 /**
  * SORTIA - Landing Page de Sorteos
  * JavaScript Principal
+ * Versión: 2.0 - Carrusel mejorado
+ * Última actualización: 2025-01-XX
  */
 
 // ============================================
