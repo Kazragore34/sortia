@@ -8,7 +8,7 @@
 // ============================================
 const CONFIG = {
     deadline: new Date('2025-12-21T23:59:59'), // 21 de diciembre a media noche
-    totalTickets: 999,
+    totalTickets: 1000, // Tickets del 000 al 999
     ticketPrice: 8, // euros
     minTickets: 2,
     whatsappNumber: '722539447' // Número de WhatsApp
@@ -367,62 +367,108 @@ Por favor, confírmame la disponibilidad y cómo proceder con el pago. ¡Gracias
 class ImageCarousel {
     constructor() {
         this.currentIndex = 0;
-        this.images = document.querySelectorAll('.carousel-image');
-        this.dots = document.querySelectorAll('.carousel-dot');
-        this.prevBtn = document.getElementById('carousel-prev');
-        this.nextBtn = document.getElementById('carousel-next');
+        this.images = [];
+        this.dots = [];
+        this.prevBtn = null;
+        this.nextBtn = null;
         this.autoPlayInterval = null;
         this.init();
     }
 
     init() {
-        if (this.images.length === 0) return;
+        // Esperar a que el DOM esté listo
+        setTimeout(() => {
+            this.images = Array.from(document.querySelectorAll('.carousel-image'));
+            this.dots = Array.from(document.querySelectorAll('.carousel-dot'));
+            this.prevBtn = document.getElementById('carousel-prev');
+            this.nextBtn = document.getElementById('carousel-next');
 
-        // Event listeners para botones
-        if (this.prevBtn) {
-            this.prevBtn.addEventListener('click', () => this.prev());
-        }
-        if (this.nextBtn) {
-            this.nextBtn.addEventListener('click', () => this.next());
-        }
+            if (this.images.length === 0) {
+                console.warn('No se encontraron imágenes del carrusel');
+                return;
+            }
 
-        // Event listeners para dots
-        this.dots.forEach((dot, index) => {
-            dot.addEventListener('click', () => this.goTo(index));
-        });
+            // Event listeners para botones
+            if (this.prevBtn) {
+                this.prevBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.prev();
+                });
+            } else {
+                console.warn('Botón anterior no encontrado');
+            }
 
-        // Auto-play cada 5 segundos
-        this.startAutoPlay();
+            if (this.nextBtn) {
+                this.nextBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.next();
+                });
+            } else {
+                console.warn('Botón siguiente no encontrado');
+            }
 
-        // Pausar auto-play al hacer hover
-        const carousel = document.getElementById('moto-carousel');
-        if (carousel) {
-            carousel.addEventListener('mouseenter', () => this.stopAutoPlay());
-            carousel.addEventListener('mouseleave', () => this.startAutoPlay());
-        }
+            // Event listeners para dots
+            this.dots.forEach((dot, index) => {
+                dot.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.goTo(index);
+                });
+            });
+
+            // Mostrar primera imagen
+            this.showImage(0);
+
+            // Auto-play cada 5 segundos
+            this.startAutoPlay();
+
+            // Pausar auto-play al hacer hover
+            const carousel = document.getElementById('moto-carousel');
+            if (carousel) {
+                carousel.addEventListener('mouseenter', () => this.stopAutoPlay());
+                carousel.addEventListener('mouseleave', () => this.startAutoPlay());
+            }
+
+            console.log('✅ Carrusel inicializado con', this.images.length, 'imágenes');
+        }, 100);
     }
 
     showImage(index) {
-        // Ocultar todas las imágenes
-        this.images.forEach(img => {
-            img.classList.remove('opacity-100');
-            img.classList.add('opacity-0');
-        });
+        if (this.images.length === 0) return;
 
-        // Mostrar imagen actual
-        if (this.images[index]) {
-            this.images[index].classList.remove('opacity-0');
-            this.images[index].classList.add('opacity-100');
-        }
+        // Asegurar que el índice sea válido
+        if (index < 0) index = this.images.length - 1;
+        if (index >= this.images.length) index = 0;
+
+        // Ocultar todas las imágenes
+        this.images.forEach((img, i) => {
+            if (i === index) {
+                img.classList.remove('opacity-0');
+                img.classList.add('opacity-100');
+                img.style.opacity = '1';
+                img.style.zIndex = '10';
+            } else {
+                img.classList.remove('opacity-100');
+                img.classList.add('opacity-0');
+                img.style.opacity = '0';
+                img.style.zIndex = '1';
+            }
+        });
 
         // Actualizar dots
         this.dots.forEach((dot, i) => {
             if (i === index) {
-                dot.classList.add('active-dot', 'bg-white');
-                dot.classList.remove('bg-white/50');
+                dot.classList.add('active-dot');
+                dot.style.background = 'white';
+                dot.style.width = '0.75rem';
+                dot.style.height = '0.75rem';
             } else {
-                dot.classList.remove('active-dot', 'bg-white');
-                dot.classList.add('bg-white/50');
+                dot.classList.remove('active-dot');
+                dot.style.background = 'rgba(255, 255, 255, 0.5)';
+                dot.style.width = '0.5rem';
+                dot.style.height = '0.5rem';
             }
         });
 
@@ -430,18 +476,21 @@ class ImageCarousel {
     }
 
     next() {
+        if (this.images.length === 0) return;
         const nextIndex = (this.currentIndex + 1) % this.images.length;
         this.showImage(nextIndex);
         this.resetAutoPlay();
     }
 
     prev() {
+        if (this.images.length === 0) return;
         const prevIndex = (this.currentIndex - 1 + this.images.length) % this.images.length;
         this.showImage(prevIndex);
         this.resetAutoPlay();
     }
 
     goTo(index) {
+        if (this.images.length === 0) return;
         if (index >= 0 && index < this.images.length) {
             this.showImage(index);
             this.resetAutoPlay();
@@ -450,9 +499,11 @@ class ImageCarousel {
 
     startAutoPlay() {
         this.stopAutoPlay();
-        this.autoPlayInterval = setInterval(() => {
-            this.next();
-        }, 5000);
+        if (this.images.length > 1) {
+            this.autoPlayInterval = setInterval(() => {
+                this.next();
+            }, 5000);
+        }
     }
 
     stopAutoPlay() {

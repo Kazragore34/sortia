@@ -293,23 +293,49 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Carrusel de imágenes */
+#moto-carousel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
 .carousel-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
     transition: opacity 0.5s ease-in-out;
+    pointer-events: none;
+}
+
+.carousel-image.opacity-100 {
+    opacity: 1 !important;
+    z-index: 10;
+}
+
+.carousel-image.opacity-0 {
+    opacity: 0 !important;
+    z-index: 1;
 }
 
 .carousel-dot {
     transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .carousel-dot.active-dot {
-    width: 0.75rem;
-    height: 0.75rem;
+    width: 0.75rem !important;
+    height: 0.75rem !important;
     background: white !important;
 }
 
 #carousel-prev,
 #carousel-next {
     backdrop-filter: blur(4px);
+    cursor: pointer;
+    z-index: 20;
 }
 
 /* Optimización de imágenes */
