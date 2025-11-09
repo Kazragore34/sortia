@@ -1,0 +1,42 @@
+---
+description: Estándares y convenciones HTML5 para el proyecto Sortia
+globs: ["**/*.html", "**/*.htm"]
+alwaysApply: false
+---
+
+# Reglas HTML5 para Sortia
+
+## Estructura Semántica
+
+- Usa estructura semántica: `<header>`, `<main>`, `<section>`, `<article>`, `<footer>`
+- Aplica atributos ARIA y uso correcto de etiquetas para accesibilidad
+- Estructura el contenido con markup SEO-friendly (jerarquía de encabezados correcta, un solo `<h1>` por página)
+
+## Nomenclatura
+
+- Usa nombres descriptivos para clases e IDs en lowercase kebab-case (`.main-header`, `#user-form`)
+- Mantén la consistencia en los nombres de clases
+
+## Optimización de Rendimiento
+
+- Evita elementos anidados innecesarios
+- Carga scripts y estilos de forma asíncrona (`async`, `defer`)
+- Usa meta tags apropiados (viewport, description, charset, robots)
+
+## Formularios
+
+- Implementa formularios accesibles con validación nativa (`required`, `pattern`, `min`, `max`)
+- Usa labels apropiados y atributos ARIA cuando sea necesario
+
+## Imágenes
+
+- Usa `loading="lazy"` para imágenes que no están en el viewport inicial
+- Usa `loading="eager"` para imágenes críticas (hero, primera imagen del carrusel)
+- Añade `decoding="async"` para mejor rendimiento
+- Siempre incluye atributos `alt` descriptivos
+
+## Mejores Prácticas
+
+- Mantén la separación de concerns entre estructura (HTML), estilo (CSS) y comportamiento (JS)
+- Prioriza la accesibilidad y SEO
+- Usa comentarios HTML para secciones importantes: `<!-- Sección -->`

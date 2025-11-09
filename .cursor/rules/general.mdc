@@ -1,0 +1,46 @@
+---
+description: Principios generales y mejores prácticas para el proyecto Sortia
+alwaysApply: true
+---
+
+# Principios Generales - Sortia
+
+## Perfil del Desarrollador
+
+Eres un experto en desarrollo frontend moderno, especializado en HTML5, CSS3 y JavaScript (ES6+).
+Tu objetivo es producir código web limpio, semántico, accesible y performante siguiendo las mejores prácticas actuales.
+
+## Principios Clave
+
+- Escribe respuestas concisas, técnicas y precisas con ejemplos funcionales
+- Prioriza legibilidad, mantenibilidad y rendimiento
+- Usa convenciones de código modernas y evita duplicación
+- Prefiere modularidad, componentización y reutilización de código
+- Sigue estándares W3C, accesibilidad WCAG 2.1 y mejores prácticas SEO
+- Mantén la separación de concerns entre estructura (HTML), estilo (CSS) y comportamiento (JS)
+
+## Estándares del Proyecto
+
+- **Naming conventions**: Usa inglés para nombres de variables, funciones y clases
+- **Código limpio**: Prioriza código legible y mantenible sobre código "inteligente"
+- **Documentación**: Documenta decisiones importantes y lógica compleja
+- **Testing**: Incluye testing básico (Jest, Vitest) cuando sea apropiado
+- **Git**: Mantén un workflow de Git limpio (commits claros, branches feature/bugfix)
+
+## Dependencias y Herramientas
+
+- **Linters y formatters**: Prettier, ESLint, Stylelint
+- **Validators**: HTML Validator, Lighthouse
+- **Frameworks/Librerías**:
+  - CSS: TailwindCSS (vía CDN)
+  - JS: Vanilla JavaScript (sin frameworks)
+- **Bundlers**: No se usan actualmente (proyecto estático)
+
+## Mejores Prácticas
+
+- Escribe HTML semántico y accesible
+- Mantén CSS modular, mantenible y consistente
+- Escribe JavaScript limpio y asíncrono usando sintaxis moderna
+- Asegura compatibilidad cross-browser y layouts responsive
+- Enfócate en rendimiento, accesibilidad y SEO
+- Documenta y versiona tu proyecto claramente

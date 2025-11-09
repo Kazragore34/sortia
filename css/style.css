@@ -504,18 +504,35 @@ img {
 .carousel-container {
     position: relative;
     isolation: isolate; /* Crea un nuevo contexto de apilamiento */
-    background: white !important;
+    background: #ffffff !important;
     z-index: 1;
+    box-shadow: none !important;
+}
+
+.carousel-container::before,
+.carousel-container::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
 }
 
 #moto-carousel {
     z-index: 1;
     position: relative;
+    background: #ffffff !important;
+}
+
+#moto-carousel::before,
+#moto-carousel::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
 }
 
 .carousel-image {
     z-index: 2;
     position: absolute;
+    background: transparent !important;
 }
 
 #carousel-prev,

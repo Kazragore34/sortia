@@ -1,0 +1,63 @@
+---
+description: Estándares y convenciones JavaScript (ES6+) para el proyecto Sortia
+globs: ["**/*.js", "**/*.mjs"]
+alwaysApply: false
+---
+
+# Reglas JavaScript para Sortia
+
+## Sintaxis Moderna
+
+- Usa JavaScript moderno (ES6+): `const`, `let`, arrow functions, destructuring
+- Evita `var` - usa `const` por defecto, `let` solo cuando necesites reasignación
+- Usa template literals para strings: `` `Texto ${variable}` ``
+
+## Organización del Código
+
+- Mantén una clara separación entre lógica y presentación
+- Divide el código en módulos pequeños y reutilizables
+- Usa clases para agrupar funcionalidad relacionada (ej: `CountdownTimer`, `TicketsCounter`)
+- Organiza el código en secciones con comentarios: `// ============================================ Sección ============================================`
+
+## Nomenclatura
+
+- Usa nombres descriptivos para variables y funciones (`getUserData`, `updateUI`)
+- Usa camelCase para variables y funciones
+- Usa PascalCase para clases
+- Usa UPPER_SNAKE_CASE para constantes
+
+## Funciones Asíncronas
+
+- Implementa lógica asíncrona con `async/await` o Promises
+- Maneja errores apropiadamente usando `try...catch`
+- Evita librerías externas innecesarias; usa APIs nativas cuando sea posible
+
+## Manipulación del DOM
+
+- Usa `querySelector` y `addEventListener` para manipulación segura del DOM
+- Usa event delegation para contenido dinámico
+- Cachea referencias del DOM cuando sea necesario para mejor rendimiento
+
+## Optimización de Rendimiento
+
+- Minimiza reflows y repaints
+- Usa `requestAnimationFrame` para animaciones
+- Usa `IntersectionObserver` para animaciones al scroll
+- Evita efectos parallax complejos que afecten el rendimiento
+
+## Almacenamiento
+
+- Usa `localStorage` o `sessionStorage` para datos ligeros
+- Valida datos antes de guardarlos
+
+## Comentarios
+
+- Usa comentarios JSDoc para funciones o módulos complejos
+- Documenta la lógica no obvia
+- Mantén comentarios actualizados con el código
+
+## Inicialización
+
+- Usa `DOMContentLoaded` para inicializar código que depende del DOM
+- Organiza la inicialización en funciones claras
+- Maneja errores en la inicialización

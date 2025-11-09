@@ -1,3 +1,62 @@
 ---
-alwaysApply: true
+description: Estándares y convenciones CSS para el proyecto Sortia
+globs: ["**/*.css", "**/*.scss", "**/*.html"]
+alwaysApply: false
 ---
+
+# Reglas CSS para Sortia
+
+## Estilos y Convenciones
+
+- Usa **Tailwind CSS** como framework principal para estilos utilitarios
+- Para estilos personalizados, usa el archivo `css/style.css`
+- Mantén los estilos personalizados organizados por secciones con comentarios claros
+
+## Nomenclatura y Organización
+
+- Usa nombres descriptivos y semánticos para clases CSS personalizadas
+- Agrupa estilos relacionados en secciones con comentarios: `/* ============================================ Sección ============================================ */`
+- Mantén las variables CSS en `:root` al inicio del archivo
+
+## Animaciones y Transiciones
+
+- Usa `transition` para cambios suaves de estado
+- Para animaciones complejas, define `@keyframes` en `css/style.css`
+- Optimiza animaciones usando `transform` y `opacity` para mejor rendimiento
+- Usa `will-change` solo cuando sea necesario y específico
+
+## Responsive Design
+
+- Prioriza el enfoque mobile-first
+- Usa las clases responsive de Tailwind: `md:`, `lg:`, etc.
+- Asegúrate de que todos los componentes sean responsive
+
+## Optimización
+
+- Evita pseudo-elementos (`::before`, `::after`) innecesarios que puedan causar problemas visuales
+- Usa `transform: translateZ(0)` para aceleración por hardware cuando sea necesario
+- Minimiza el uso de `!important` - solo cuando sea absolutamente necesario
+- Usa `isolation: isolate` para crear nuevos contextos de apilamiento cuando sea necesario
+
+## Específico del Proyecto
+
+- La paleta de colores principal usa la escala `ceramic-*` (50-900)
+- Los fondos usan gradientes sutiles: `bg-gradient-to-br from-ceramic-50 to-ceramic-100`
+- Las tarjetas usan `rounded-2xl` para bordes redondeados
+- Las sombras usan `shadow-xl` o `shadow-lg` para profundidad
+
+## Clases Personalizadas Importantes
+
+- `.content-box`: Para tarjetas con efecto hover
+- `.animate-on-scroll`: Para animaciones al hacer scroll
+- `.carousel-container`: Contenedor específico del carrusel (sin pseudo-elementos)
+- `.hero-background-image`: Imagen de fondo del hero (sin transiciones)
+
+## Mejores Prácticas
+
+- No uses efectos parallax complejos que afecten el rendimiento
+- Mantén las animaciones suaves pero no excesivas (duración recomendada: 0.8s - 1.2s)
+- Asegúrate de que los contenedores tengan fondos sólidos cuando sea necesario para evitar artefactos visuales
+- Usa `overflow: hidden` en contenedores de imágenes para evitar desbordamientos
+- Para contenedores de carruseles, usa `background: #ffffff !important` y desactiva todos los pseudo-elementos
+- Usa `isolation: isolate` para crear nuevos contextos de apilamiento cuando sea necesario
