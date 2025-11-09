@@ -93,96 +93,100 @@ $theme_uri = get_template_directory_uri();
             <div class="grid md:grid-cols-2 gap-8 lg:gap-12 items-start">
                 <!-- Columna Izquierda: Carrusel y Especificaciones -->
                 <div class="order-2 md:order-1 space-y-6">
-                    <!-- Carrusel de imágenes de la moto -->
+                    <!-- Carrusel de imágenes de la moto - VERSIÓN SIMPLIFICADA -->
                     <div class="bg-gradient-to-br from-ceramic-50 to-ceramic-100 rounded-2xl p-6 md:p-8 shadow-xl border border-ceramic-200 animate-on-scroll no-shimmer">
-                        <div class="relative rounded-xl overflow-hidden carousel-container" style="background: #ffffff !important;">
-                            <div id="moto-carousel" class="relative aspect-[3/2]" style="background: #ffffff !important;">
+                        <div class="relative rounded-xl overflow-hidden" style="background: #ffffff; min-height: 400px;">
+                            <!-- Contenedor del carrusel -->
+                            <div id="moto-carousel" class="relative" style="width: 100%; height: 100%; min-height: 400px; background: #ffffff;">
+                                <!-- Imágenes del carrusel -->
                                 <img src="<?php echo esc_url($theme_uri); ?>/images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-002-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-100"
-                                     loading="eager"
-                                     decoding="async">
+                                     class="moto-carousel-img"
+                                     data-index="0"
+                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 1; z-index: 10;">
                                 <img src="<?php echo esc_url($theme_uri); ?>/images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-004-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-0"
-                                     loading="lazy"
-                                     decoding="async">
+                                     class="moto-carousel-img"
+                                     data-index="1"
+                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 0; z-index: 1;">
                                 <img src="<?php echo esc_url($theme_uri); ?>/images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-006-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-0"
-                                     loading="lazy"
-                                     decoding="async">
+                                     class="moto-carousel-img"
+                                     data-index="2"
+                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 0; z-index: 1;">
                                 <img src="<?php echo esc_url($theme_uri); ?>/images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-007-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-0"
-                                     loading="lazy"
-                                     decoding="async">
+                                     class="moto-carousel-img"
+                                     data-index="3"
+                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 0; z-index: 1;">
                                 <img src="<?php echo esc_url($theme_uri); ?>/images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-008-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-0"
-                                     loading="lazy"
-                                     decoding="async">
+                                     class="moto-carousel-img"
+                                     data-index="4"
+                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 0; z-index: 1;">
                                 <img src="<?php echo esc_url($theme_uri); ?>/images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Static-002-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-0"
-                                     loading="lazy"
-                                     decoding="async">
+                                     class="moto-carousel-img"
+                                     data-index="5"
+                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 0; z-index: 1;">
                                 <img src="<?php echo esc_url($theme_uri); ?>/images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Static-003-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-0"
-                                     loading="lazy"
-                                     decoding="async">
+                                     class="moto-carousel-img"
+                                     data-index="6"
+                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 0; z-index: 1;">
                                 <img src="<?php echo esc_url($theme_uri); ?>/images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Static-005-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-0"
-                                     loading="lazy"
-                                     decoding="async">
+                                     class="moto-carousel-img"
+                                     data-index="7"
+                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 0; z-index: 1;">
                                 <img src="<?php echo esc_url($theme_uri); ?>/images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Static-006-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-0"
-                                     loading="lazy"
-                                     decoding="async">
+                                     class="moto-carousel-img"
+                                     data-index="8"
+                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 0; z-index: 1;">
                                 <img src="<?php echo esc_url($theme_uri); ?>/images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Static-008-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-0"
-                                     loading="lazy"
-                                     decoding="async">
+                                     class="moto-carousel-img"
+                                     data-index="9"
+                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 0; z-index: 1;">
                                 <img src="<?php echo esc_url($theme_uri); ?>/images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Static-013-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-0"
-                                     loading="lazy"
-                                     decoding="async">
+                                     class="moto-carousel-img"
+                                     data-index="10"
+                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 0; z-index: 1;">
                                 <img src="<?php echo esc_url($theme_uri); ?>/images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Static-017-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
-                                     class="carousel-image opacity-0"
-                                     loading="lazy"
-                                     decoding="async">
+                                     class="moto-carousel-img"
+                                     data-index="11"
+                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 0; z-index: 1;">
                             </div>
-                            <!-- Botones de navegación del carrusel -->
-                            <button id="carousel-prev" class="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-ceramic-800 rounded-full p-2 shadow-lg transition z-10">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            
+                            <!-- Botones de navegación -->
+                            <button id="carousel-prev" type="button" style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.8); border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center;">
+                                <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                                 </svg>
                             </button>
-                            <button id="carousel-next" class="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-ceramic-800 rounded-full p-2 shadow-lg transition z-10">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button id="carousel-next" type="button" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.8); border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center;">
+                                <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                 </svg>
                             </button>
-                            <!-- Indicadores -->
-                            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-30" style="z-index: 30 !important;">
-                                <span class="carousel-dot w-2 h-2 rounded-full bg-white/80 cursor-pointer transition-all active-dot"></span>
-                                <span class="carousel-dot w-2 h-2 rounded-full bg-white/50 cursor-pointer transition-all"></span>
-                                <span class="carousel-dot w-2 h-2 rounded-full bg-white/50 cursor-pointer transition-all"></span>
-                                <span class="carousel-dot w-2 h-2 rounded-full bg-white/50 cursor-pointer transition-all"></span>
-                                <span class="carousel-dot w-2 h-2 rounded-full bg-white/50 cursor-pointer transition-all"></span>
-                                <span class="carousel-dot w-2 h-2 rounded-full bg-white/50 cursor-pointer transition-all"></span>
-                                <span class="carousel-dot w-2 h-2 rounded-full bg-white/50 cursor-pointer transition-all"></span>
-                                <span class="carousel-dot w-2 h-2 rounded-full bg-white/50 cursor-pointer transition-all"></span>
-                                <span class="carousel-dot w-2 h-2 rounded-full bg-white/50 cursor-pointer transition-all"></span>
-                                <span class="carousel-dot w-2 h-2 rounded-full bg-white/50 cursor-pointer transition-all"></span>
-                                <span class="carousel-dot w-2 h-2 rounded-full bg-white/50 cursor-pointer transition-all"></span>
-                                <span class="carousel-dot w-2 h-2 rounded-full bg-white/50 cursor-pointer transition-all"></span>
+                            
+                            <!-- Indicadores (dots) -->
+                            <div id="carousel-dots" style="position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 100;">
+                                <span class="carousel-dot" data-dot="0" style="width: 12px; height: 12px; border-radius: 50%; background: white; cursor: pointer; display: block;"></span>
+                                <span class="carousel-dot" data-dot="1" style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; display: block;"></span>
+                                <span class="carousel-dot" data-dot="2" style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; display: block;"></span>
+                                <span class="carousel-dot" data-dot="3" style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; display: block;"></span>
+                                <span class="carousel-dot" data-dot="4" style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; display: block;"></span>
+                                <span class="carousel-dot" data-dot="5" style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; display: block;"></span>
+                                <span class="carousel-dot" data-dot="6" style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; display: block;"></span>
+                                <span class="carousel-dot" data-dot="7" style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; display: block;"></span>
+                                <span class="carousel-dot" data-dot="8" style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; display: block;"></span>
+                                <span class="carousel-dot" data-dot="9" style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; display: block;"></span>
+                                <span class="carousel-dot" data-dot="10" style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; display: block;"></span>
+                                <span class="carousel-dot" data-dot="11" style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; display: block;"></span>
                             </div>
                         </div>
                     </div>
