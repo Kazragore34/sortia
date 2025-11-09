@@ -489,42 +489,42 @@ class ImageCarousel {
         if (index < 0) index = this.images.length - 1;
         if (index >= this.images.length) index = 0;
 
-        console.log(`🖼️ Cambiando a imagen ${index + 1} de ${this.images.length}`);
-        console.log(`📸 URL:`, this.images[index].src);
+        console.log(`🖼️ ===== CAMBIANDO IMAGEN =====`);
+        console.log(`📊 Índice: ${index} de ${this.images.length - 1}`);
+        console.log(`📸 URL de la imagen:`, this.images[index].src);
+        console.log(`🖼️ Elemento imagen:`, this.images[index]);
 
         // Cambiar todas las imágenes
         this.images.forEach((img, i) => {
             if (i === index) {
                 // Imagen activa - VISIBLE
-                img.style.opacity = '1';
-                img.style.zIndex = '10';
-                img.style.visibility = 'visible';
-                img.style.display = 'block';
-                console.log(`✅ Imagen ${i + 1} ACTIVA`);
+                console.log(`✅ Activando imagen ${i + 1}`);
+                console.log(`   - Antes: opacity=${img.style.opacity}, zIndex=${img.style.zIndex}, visibility=${img.style.visibility}`);
+                
+                // Aplicar estilos directamente
+                img.setAttribute('style', 'position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: contain !important; display: block !important; opacity: 1 !important; z-index: 10 !important; visibility: visible !important;');
+                
+                console.log(`   - Después: opacity=${img.style.opacity}, zIndex=${img.style.zIndex}, visibility=${img.style.visibility}`);
+                console.log(`   - Computed opacity:`, window.getComputedStyle(img).opacity);
+                console.log(`   - Computed z-index:`, window.getComputedStyle(img).zIndex);
+                console.log(`   - Computed visibility:`, window.getComputedStyle(img).visibility);
             } else {
                 // Imágenes inactivas - OCULTAS
-                img.style.opacity = '0';
-                img.style.zIndex = '1';
-                img.style.visibility = 'hidden';
-                img.style.display = 'block';
+                img.setAttribute('style', 'position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: contain !important; display: block !important; opacity: 0 !important; z-index: 1 !important; visibility: hidden !important;');
             }
         });
 
         // Actualizar dots
         this.dots.forEach((dot, i) => {
             if (i === index) {
-                dot.style.width = '12px';
-                dot.style.height = '12px';
-                dot.style.background = 'white';
+                dot.setAttribute('style', 'width: 12px !important; height: 12px !important; border-radius: 50% !important; background: white !important; cursor: pointer !important; display: block !important;');
             } else {
-                dot.style.width = '8px';
-                dot.style.height = '8px';
-                dot.style.background = 'rgba(255, 255, 255, 0.5)';
+                dot.setAttribute('style', 'width: 8px !important; height: 8px !important; border-radius: 50% !important; background: rgba(255, 255, 255, 0.5) !important; cursor: pointer !important; display: block !important;');
             }
         });
 
         this.currentIndex = index;
-        console.log(`✅ Imagen ${index + 1} mostrada correctamente`);
+        console.log(`✅ ===== IMAGEN ${index + 1} MOSTRADA =====`);
     }
 
     next() {

@@ -95,9 +95,9 @@ $theme_uri = get_template_directory_uri();
                 <div class="order-2 md:order-1 space-y-6">
                     <!-- Carrusel de imágenes de la moto - VERSIÓN SIMPLIFICADA -->
                     <div class="bg-gradient-to-br from-ceramic-50 to-ceramic-100 rounded-2xl p-6 md:p-8 shadow-xl border border-ceramic-200 animate-on-scroll no-shimmer">
-                        <div class="relative rounded-xl overflow-hidden" style="background: #ffffff; min-height: 400px;">
+                        <div class="relative rounded-xl overflow-hidden" style="background: #ffffff; min-height: 400px; position: relative;">
                             <!-- Contenedor del carrusel -->
-                            <div id="moto-carousel" class="relative" style="width: 100%; height: 100%; min-height: 400px; background: #ffffff;">
+                            <div id="moto-carousel" class="relative" style="width: 100%; min-height: 400px; height: 400px; background: #ffffff; position: relative;">
                                 <!-- Imágenes del carrusel -->
                                 <img src="<?php echo esc_url($theme_uri); ?>/images/2025-Yamaha-G125YMSV-EU-Ceramic_Grey-Studio-002-03.jpg" 
                                      alt="Yamaha NMAX 125cc 2025" 
