@@ -409,22 +409,45 @@ class ImageCarousel {
     init() {
         // Esperar a que el DOM esté completamente cargado
         const initCarousel = () => {
+            console.log('🔍 ===== INICIANDO CARRUSEL =====');
+            console.log('Estado del documento:', document.readyState);
+            
             // Buscar imágenes con la nueva clase
             this.images = Array.from(document.querySelectorAll('.moto-carousel-img'));
             this.dots = Array.from(document.querySelectorAll('.carousel-dot'));
             this.prevBtn = document.getElementById('carousel-prev');
             this.nextBtn = document.getElementById('carousel-next');
 
-            console.log('🔍 Inicializando carrusel...');
-            console.log('Imágenes encontradas:', this.images.length);
-            console.log('Dots encontrados:', this.dots.length);
-            console.log('Botón prev:', this.prevBtn ? '✅' : '❌');
-            console.log('Botón next:', this.nextBtn ? '✅' : '❌');
+            console.log('📊 Elementos encontrados:');
+            console.log('  - Imágenes:', this.images.length);
+            console.log('  - Dots:', this.dots.length);
+            console.log('  - Botón prev:', this.prevBtn ? '✅' : '❌');
+            console.log('  - Botón next:', this.nextBtn ? '✅' : '❌');
 
             if (this.images.length === 0) {
-                console.error('❌ No se encontraron imágenes del carrusel');
+                console.error('❌ ERROR: No se encontraron imágenes del carrusel');
+                console.log('Buscando elementos con clase .moto-carousel-img...');
+                const allImages = document.querySelectorAll('img');
+                console.log('Total de imágenes en la página:', allImages.length);
                 return;
             }
+
+            // Verificar que todas las imágenes estén cargadas
+            let loadedImages = 0;
+            this.images.forEach((img, index) => {
+                if (img.complete) {
+                    loadedImages++;
+                    console.log(`✅ Imagen ${index + 1} ya cargada:`, img.src);
+                } else {
+                    img.addEventListener('load', () => {
+                        loadedImages++;
+                        console.log(`✅ Imagen ${index + 1} cargada:`, img.src);
+                    });
+                    img.addEventListener('error', () => {
+                        console.error(`❌ Error cargando imagen ${index + 1}:`, img.src);
+                    });
+                }
+            });
 
             // Event listeners para botones
             if (this.prevBtn) {
@@ -434,6 +457,8 @@ class ImageCarousel {
                     console.log('⬅️ Click en botón anterior');
                     this.prev();
                 });
+            } else {
+                console.warn('⚠️ Botón prev no encontrado');
             }
 
             if (this.nextBtn) {
@@ -443,6 +468,8 @@ class ImageCarousel {
                     console.log('➡️ Click en botón siguiente');
                     this.next();
                 });
+            } else {
+                console.warn('⚠️ Botón next no encontrado');
             }
 
             // Event listeners para dots
@@ -455,8 +482,10 @@ class ImageCarousel {
                 });
             });
 
-            // Mostrar primera imagen
-            this.showImage(0);
+            // Mostrar primera imagen después de un pequeño delay para asegurar que todo esté listo
+            setTimeout(() => {
+                this.showImage(0);
+            }, 100);
 
             // Auto-play cada 5 segundos
             this.startAutoPlay();
@@ -468,14 +497,19 @@ class ImageCarousel {
                 carousel.addEventListener('mouseleave', () => this.startAutoPlay());
             }
 
-            console.log('✅ Carrusel inicializado correctamente');
+            console.log('✅ ===== CARRUSEL INICIALIZADO CORRECTAMENTE =====');
+            console.log(`📸 Total de imágenes: ${this.images.length}`);
+            console.log(`🔘 Total de dots: ${this.dots.length}`);
         };
 
-        // Esperar a que el DOM esté listo
+        // Esperar a que el DOM esté listo - con múltiples intentos
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initCarousel);
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(initCarousel, 200);
+            });
         } else {
-            setTimeout(initCarousel, 100);
+            // Si el DOM ya está listo, esperar un poco más para asegurar que todo esté renderizado
+            setTimeout(initCarousel, 300);
         }
     }
 

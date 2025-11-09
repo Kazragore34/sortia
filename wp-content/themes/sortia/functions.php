@@ -21,11 +21,11 @@ function sortia_enqueue_scripts() {
     // Google Fonts
     wp_enqueue_style('google-fonts', 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap', array(), null);
     
-    // Custom CSS
-    wp_enqueue_style('sortia-style', get_template_directory_uri() . '/css/style.css', array(), $theme_version);
+    // Custom CSS - con versión para evitar caché
+    wp_enqueue_style('sortia-style', get_template_directory_uri() . '/css/style.css', array(), time());
     
-    // Custom JavaScript
-    wp_enqueue_script('sortia-main', get_template_directory_uri() . '/js/main.js', array(), $theme_version, true);
+    // Custom JavaScript - con versión para evitar caché
+    wp_enqueue_script('sortia-main', get_template_directory_uri() . '/js/main.js', array(), time(), true);
     
     // Tailwind Config
     wp_add_inline_script('tailwind-cdn', "
