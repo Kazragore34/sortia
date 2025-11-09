@@ -492,47 +492,57 @@ img {
     left: 100%;
 }
 
-/* Excluir el efecto ::before del contenedor del carrusel */
+/* Excluir el efecto ::before del contenedor del carrusel y sus padres */
+.carousel-container,
+.carousel-container *,
+#moto-carousel,
+#moto-carousel * {
+    position: relative;
+}
+
 .carousel-container::before,
 .carousel-container::after,
 #moto-carousel::before,
-#moto-carousel::after {
+#moto-carousel::after,
+.carousel-image::before,
+.carousel-image::after {
     display: none !important;
     content: none !important;
+    background: none !important;
+    pointer-events: none !important;
 }
 
+/* Asegurar que el contenedor del carrusel esté por encima del efecto de brillo */
 .carousel-container {
     position: relative;
     isolation: isolate; /* Crea un nuevo contexto de apilamiento */
     background: #ffffff !important;
-    z-index: 1;
+    z-index: 10 !important; /* Por encima del efecto de brillo (z-index: 1) */
     box-shadow: none !important;
-}
-
-.carousel-container::before,
-.carousel-container::after {
-    display: none !important;
-    content: none !important;
-    background: none !important;
+    transform: translateZ(0); /* Crea un nuevo layer de composición */
 }
 
 #moto-carousel {
-    z-index: 1;
+    z-index: 11 !important;
     position: relative;
     background: #ffffff !important;
-}
-
-#moto-carousel::before,
-#moto-carousel::after {
-    display: none !important;
-    content: none !important;
-    background: none !important;
+    transform: translateZ(0); /* Crea un nuevo layer de composición */
 }
 
 .carousel-image {
-    z-index: 2;
+    z-index: 12 !important;
     position: absolute;
     background: transparent !important;
+    transform: translateZ(0); /* Crea un nuevo layer de composición */
+}
+
+/* Excluir el efecto de brillo de contenedores con la clase no-shimmer o que contengan carrusel */
+.no-shimmer::before,
+.no-shimmer::after,
+.content-box:has(.carousel-container)::before {
+    display: none !important;
+    content: none !important;
+    pointer-events: none !important;
 }
 
 #carousel-prev,
