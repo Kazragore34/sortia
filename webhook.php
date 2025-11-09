@@ -51,7 +51,7 @@ if ($from && $from_me === false) {
     $json_con_categoria = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     
     // 9. URL del webhook de n8n
-    $n8nWebhook = 'https://n8n.wolffilms.es/webhook/f474262a-2787-4061-a7ed-89d941d066ea';
+    $n8nWebhook = 'https://n8n.wolffilms.es/webhook-test/f474262a-2787-4061-a7ed-89d941d066ea';
     
     // 10. cURL "Disparar y Olvidar" para no causar timeouts
     $ch = curl_init($n8nWebhook);
