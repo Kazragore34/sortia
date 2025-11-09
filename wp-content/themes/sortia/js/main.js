@@ -1,8 +1,11 @@
 /**
  * SORTIA - Landing Page de Sorteos
  * JavaScript Principal
- * Versión: 2.0 - Carrusel mejorado
- * Última actualización: 2025-01-XX
+ * Versión: 2.1 - Carrusel mejorado con logs detallados
+ * Última actualización: 2025-01-09
+ * 
+ * IMPORTANTE: Si ves "Carrusel inicializado con 12 imágenes" en la consola,
+ * significa que estás usando una versión en caché. Purgar caché de LiteSpeed Cache.
  */
 
 // ============================================

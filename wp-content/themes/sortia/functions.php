@@ -26,8 +26,17 @@ function sortia_enqueue_scripts() {
     wp_enqueue_style('sortia-style', get_template_directory_uri() . '/css/style.css', array(), $css_version);
     
     // Custom JavaScript - con versión para evitar caché (agregar ?v=timestamp)
-    $js_version = filemtime(get_template_directory() . '/js/main.js');
+    // Usar time() para forzar recarga en cada petición durante desarrollo
+    $js_version = time(); // Cambiar a filemtime() en producción
     wp_enqueue_script('sortia-main', get_template_directory_uri() . '/js/main.js', array(), $js_version, true);
+    
+    // Agregar parámetro de consulta adicional para forzar recarga
+    add_filter('script_loader_src', function($src, $handle) {
+        if ($handle === 'sortia-main') {
+            $src = add_query_arg('nocache', time(), $src);
+        }
+        return $src;
+    }, 10, 2);
     
     // Tailwind Config
     wp_add_inline_script('tailwind-cdn', "
