@@ -485,10 +485,48 @@ img {
     transition: left 0.5s ease;
     pointer-events: none;
     border-radius: inherit;
+    z-index: 1;
 }
 
 .content-box:hover::before {
     left: 100%;
+}
+
+/* Excluir el efecto ::before del contenedor del carrusel */
+.carousel-container::before,
+.carousel-container::after,
+#moto-carousel::before,
+#moto-carousel::after {
+    display: none !important;
+    content: none !important;
+}
+
+.carousel-container {
+    position: relative;
+    isolation: isolate; /* Crea un nuevo contexto de apilamiento */
+    background: white !important;
+    z-index: 1;
+}
+
+#moto-carousel {
+    z-index: 1;
+    position: relative;
+}
+
+.carousel-image {
+    z-index: 2;
+    position: absolute;
+}
+
+#carousel-prev,
+#carousel-next {
+    z-index: 30 !important;
+    position: absolute;
+}
+
+.absolute.bottom-4 {
+    z-index: 30 !important;
+    position: absolute;
 }
 
 /* ============================================
