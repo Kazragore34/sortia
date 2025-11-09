@@ -1,0 +1,39 @@
+# WordPress Core
+wp-config.php
+wp-config-sample.php
+.htaccess
+
+# WordPress Uploads
+wp-content/uploads/
+wp-content/upgrade/
+wp-content/backup-db/
+wp-content/advanced-cache.php
+wp-content/wp-cache-config.php
+
+# WordPress Cache
+wp-content/cache/
+wp-content/litespeed/
+
+# WordPress Debug
+wp-content/debug.log
+*.log
+
+# Node modules (si usas npm)
+node_modules/
+package-lock.json
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+
