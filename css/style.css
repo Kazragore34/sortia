@@ -348,3 +348,17 @@ img {
     image-rendering: auto;
 }
 
+/* Imagen de fondo del Hero - sin transiciones de opacidad */
+.hero-background-image {
+    transition: none !important;
+    animation: none !important;
+    will-change: auto;
+    opacity: 0.6 !important;
+}
+
+.hero-background-overlay {
+    transition: none !important;
+    animation: none !important;
+    will-change: auto;
+}
+
