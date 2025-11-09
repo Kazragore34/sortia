@@ -170,7 +170,7 @@ $theme_uri = get_template_directory_uri();
                                 </svg>
                             </button>
                             <!-- Indicadores -->
-                            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-30" style="z-index: 30 !important;">
                                 <span class="carousel-dot w-2 h-2 rounded-full bg-white/80 cursor-pointer transition-all active-dot"></span>
                                 <span class="carousel-dot w-2 h-2 rounded-full bg-white/50 cursor-pointer transition-all"></span>
                                 <span class="carousel-dot w-2 h-2 rounded-full bg-white/50 cursor-pointer transition-all"></span>

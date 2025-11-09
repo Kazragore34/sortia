@@ -407,15 +407,21 @@ class ImageCarousel {
     }
 
     init() {
-        // Esperar a que el DOM esté listo
-        setTimeout(() => {
+        // Esperar a que el DOM esté completamente cargado
+        const initCarousel = () => {
             this.images = Array.from(document.querySelectorAll('.carousel-image'));
             this.dots = Array.from(document.querySelectorAll('.carousel-dot'));
             this.prevBtn = document.getElementById('carousel-prev');
             this.nextBtn = document.getElementById('carousel-next');
 
+            console.log('🔍 Buscando elementos del carrusel...');
+            console.log('Imágenes encontradas:', this.images.length);
+            console.log('Dots encontrados:', this.dots.length);
+            console.log('Botón prev:', this.prevBtn ? 'Sí' : 'No');
+            console.log('Botón next:', this.nextBtn ? 'Sí' : 'No');
+
             if (this.images.length === 0) {
-                console.warn('No se encontraron imágenes del carrusel');
+                console.error('❌ No se encontraron imágenes del carrusel');
                 return;
             }
 
@@ -427,7 +433,7 @@ class ImageCarousel {
                     this.prev();
                 });
             } else {
-                console.warn('Botón anterior no encontrado');
+                console.warn('⚠️ Botón anterior no encontrado');
             }
 
             if (this.nextBtn) {
@@ -437,7 +443,7 @@ class ImageCarousel {
                     this.next();
                 });
             } else {
-                console.warn('Botón siguiente no encontrado');
+                console.warn('⚠️ Botón siguiente no encontrado');
             }
 
             // Event listeners para dots
@@ -447,6 +453,24 @@ class ImageCarousel {
                     e.stopPropagation();
                     this.goTo(index);
                 });
+            });
+
+            // Asegurar que todas las imágenes estén cargadas
+            let imagesLoaded = 0;
+            this.images.forEach((img, index) => {
+                if (img.complete) {
+                    imagesLoaded++;
+                } else {
+                    img.addEventListener('load', () => {
+                        imagesLoaded++;
+                        if (imagesLoaded === this.images.length) {
+                            console.log('✅ Todas las imágenes cargadas');
+                        }
+                    });
+                    img.addEventListener('error', () => {
+                        console.error('❌ Error cargando imagen:', img.src);
+                    });
+                }
             });
 
             // Mostrar primera imagen
@@ -463,15 +487,28 @@ class ImageCarousel {
             }
 
             console.log('✅ Carrusel inicializado con', this.images.length, 'imágenes');
-        }, 100);
+        };
+
+        // Intentar inicializar inmediatamente si el DOM está listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initCarousel);
+        } else {
+            // DOM ya está listo, pero esperar un poco más para WordPress
+            setTimeout(initCarousel, 300);
+        }
     }
 
     showImage(index) {
-        if (this.images.length === 0) return;
+        if (this.images.length === 0) {
+            console.warn('⚠️ No hay imágenes para mostrar');
+            return;
+        }
 
         // Asegurar que el índice sea válido
         if (index < 0) index = this.images.length - 1;
         if (index >= this.images.length) index = 0;
+
+        console.log(`🖼️ Mostrando imagen ${index + 1} de ${this.images.length}`);
 
         // Ocultar todas las imágenes
         this.images.forEach((img, i) => {
@@ -480,28 +517,39 @@ class ImageCarousel {
                 img.classList.add('opacity-100');
                 img.style.opacity = '1';
                 img.style.zIndex = '10';
+                img.style.display = 'block';
+                console.log(`✅ Imagen ${i + 1} visible:`, img.src);
             } else {
                 img.classList.remove('opacity-100');
                 img.classList.add('opacity-0');
                 img.style.opacity = '0';
                 img.style.zIndex = '1';
+                // No ocultar completamente para que se carguen
+                img.style.display = 'block';
             }
         });
 
         // Actualizar dots
-        this.dots.forEach((dot, i) => {
-            if (i === index) {
-                dot.classList.add('active-dot');
-                dot.style.background = 'white';
-                dot.style.width = '0.75rem';
-                dot.style.height = '0.75rem';
-            } else {
-                dot.classList.remove('active-dot');
-                dot.style.background = 'rgba(255, 255, 255, 0.5)';
-                dot.style.width = '0.5rem';
-                dot.style.height = '0.5rem';
-            }
-        });
+        if (this.dots.length > 0) {
+            this.dots.forEach((dot, i) => {
+                if (i === index) {
+                    dot.classList.add('active-dot');
+                    dot.style.background = 'white';
+                    dot.style.width = '0.75rem';
+                    dot.style.height = '0.75rem';
+                    dot.style.opacity = '1';
+                } else {
+                    dot.classList.remove('active-dot');
+                    dot.style.background = 'rgba(255, 255, 255, 0.5)';
+                    dot.style.width = '0.5rem';
+                    dot.style.height = '0.5rem';
+                    dot.style.opacity = '1';
+                }
+            });
+            console.log(`✅ Dots actualizados. Dots totales: ${this.dots.length}`);
+        } else {
+            console.warn('⚠️ No se encontraron dots para actualizar');
+        }
 
         this.currentIndex = index;
     }

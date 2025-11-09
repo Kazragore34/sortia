@@ -331,6 +331,9 @@ h1, h2, h3, h4, h5, h6 {
 .carousel-dot {
     transition: all 0.3s ease;
     cursor: pointer;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .carousel-dot.active-dot {
@@ -597,6 +600,22 @@ div.no-shimmer.content-box:hover {
 #carousel-next {
     z-index: 30 !important;
     position: absolute;
+}
+
+/* Asegurar que los dots sean visibles */
+.carousel-container .absolute.bottom-4 {
+    z-index: 30 !important;
+    position: absolute !important;
+    display: flex !important;
+    visibility: visible !important;
+}
+
+.carousel-container .absolute.bottom-4 .carousel-dot {
+    z-index: 31 !important;
+    position: relative !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .absolute.bottom-4 {
