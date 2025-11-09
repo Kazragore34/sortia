@@ -185,28 +185,6 @@ function initSmoothScroll() {
     });
 }
 
-// ============================================
-// ANIMACIONES AL SCROLL
-// ============================================
-function initScrollAnimations() {
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animate-fade-in-up');
-                observer.unobserve(entry.target);
-            }
-        });
-    }, observerOptions);
-
-    document.querySelectorAll('section > div').forEach(section => {
-        observer.observe(section);
-    });
-}
 
 // ============================================
 // MANEJO DE COMPRA DE TICKETS
@@ -520,6 +498,93 @@ class ImageCarousel {
 }
 
 // ============================================
+// ANIMACIONES AL SCROLL
+// ============================================
+function initScrollAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animated');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    // Observar todos los elementos con la clase animate-on-scroll
+    document.querySelectorAll('.animate-on-scroll').forEach(element => {
+        observer.observe(element);
+    });
+}
+
+// ============================================
+// EFECTO PARALLAX
+// ============================================
+function initParallax() {
+    const parallaxElements = document.querySelectorAll('.parallax-element');
+    const parallaxSections = document.querySelectorAll('.parallax-section');
+    
+    let ticking = false;
+
+    function updateParallax() {
+        const scrollY = window.pageYOffset;
+        
+        // Parallax para elementos individuales
+        parallaxElements.forEach(element => {
+            const rect = element.getBoundingClientRect();
+            const elementTop = rect.top + scrollY;
+            const elementHeight = rect.height;
+            const windowHeight = window.innerHeight;
+            
+            // Calcular si el elemento está visible
+            if (rect.bottom >= 0 && rect.top <= windowHeight) {
+                const scrolled = scrollY - (elementTop - windowHeight);
+                const parallaxSpeed = 0.3;
+                const yPos = -(scrolled * parallaxSpeed);
+                element.style.transform = `translateY(${yPos}px)`;
+            }
+        });
+
+        // Parallax para secciones
+        parallaxSections.forEach(section => {
+            const rect = section.getBoundingClientRect();
+            const sectionTop = rect.top;
+            const sectionHeight = rect.height;
+            const windowHeight = window.innerHeight;
+            
+            if (rect.bottom >= 0 && rect.top <= windowHeight) {
+                const scrolled = sectionTop;
+                const parallaxSpeed = 0.5;
+                const yPos = scrolled * parallaxSpeed;
+                
+                // Aplicar parallax a elementos de fondo dentro de la sección
+                const bgElements = section.querySelectorAll('.hero-background-image');
+                bgElements.forEach(bg => {
+                    bg.style.transform = `translateY(${yPos * 0.3}px)`;
+                });
+            }
+        });
+
+        ticking = false;
+    }
+
+    function requestTick() {
+        if (!ticking) {
+            window.requestAnimationFrame(updateParallax);
+            ticking = true;
+        }
+    }
+
+    window.addEventListener('scroll', requestTick);
+    window.addEventListener('resize', requestTick);
+    updateParallax(); // Ejecutar una vez al cargar
+}
+
+// ============================================
 // INICIALIZACIÓN
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -538,8 +603,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar smooth scroll
     initSmoothScroll();
     
-    // Inicializar animaciones
+    // Inicializar animaciones al scroll
     initScrollAnimations();
+    
+    // Inicializar efecto parallax
+    initParallax();
     
     // Inicializar compra de tickets
     initTicketPurchase();
