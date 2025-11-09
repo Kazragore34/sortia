@@ -492,6 +492,34 @@ img {
     left: 100%;
 }
 
+/* Desactivar completamente el efecto de brillo y hover en elementos con no-shimmer */
+.content-box.no-shimmer::before,
+.content-box.no-shimmer::after,
+.no-shimmer.content-box::before,
+.no-shimmer.content-box::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transform: none !important;
+}
+
+.content-box.no-shimmer:hover::before,
+.no-shimmer.content-box:hover::before {
+    display: none !important;
+    content: none !important;
+    left: -100% !important;
+    transform: none !important;
+}
+
+/* Desactivar también el efecto hover de transform en no-shimmer */
+.content-box.no-shimmer:hover,
+.no-shimmer.content-box:hover {
+    transform: none !important;
+}
+
 /* Excluir el efecto ::before del contenedor del carrusel y sus padres */
 .carousel-container,
 .carousel-container *,
