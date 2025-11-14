@@ -24,7 +24,7 @@ const CONFIG = {
         options: {
             // API Key de Google Cloud Console
             apiKey: 'AIzaSyBTg5ozE85sC1Qvw2ZbxnTW5Jxnn0cL4iE',
-            // Rango específico a leer (columna D desde fila 2 hasta 1002)
+            // Rango específico a leer (columna D desde fila 2 hasta 1002 - columna de estado)
             range: 'D2:D1002'
         }
     }
@@ -411,8 +411,21 @@ class TicketsCounter {
             const method = CONFIG.googleSheets?.method || 'csv';
             const options = CONFIG.googleSheets?.options || {};
             
+            console.log('🔍 Intentando leer Google Sheets...', {
+                method,
+                sheetId: this.googleSheets.sheetId,
+                sheetName: this.googleSheets.sheetName,
+                range: options.range
+            });
+            
             // Leer datos según el método configurado
             const data = await this.googleSheets.fetchData(method, options);
+            
+            console.log('✅ Datos recibidos de Google Sheets:', {
+                headers: data.headers,
+                totalRows: data.rows ? data.rows.length : 0,
+                firstRows: data.rows ? data.rows.slice(0, 5) : []
+            });
             
             // Intentar detectar la columna de estado automáticamente
             // Buscar columnas comunes: 'Estado', 'Status', 'estado', 'status', etc.
@@ -438,6 +451,8 @@ class TicketsCounter {
                 // Si hay headers, usar el primero (caso del rango D2:D1002)
                 statusColumn = data.headers[0];
                 
+                console.log(`📋 Usando columna: "${statusColumn}"`);
+                
                 // Si el primer header es "estado" o similar, puede ser un header real
                 // Si no, puede ser que la primera fila sea un dato
                 const firstHeader = statusColumn.toLowerCase().trim();
@@ -452,6 +467,11 @@ class TicketsCounter {
                 totalAvailable = this.googleSheets.countAvailableTickets(data, statusColumn, 'disponible');
                 
                 console.log(`📊 Columna D detectada (${statusColumn}) - Vendidos: ${sold}, Reservados: ${reserved}, Disponibles: ${totalAvailable}, Total vendidos/reservados: ${totalSold}`);
+                
+                // Mostrar algunos valores de ejemplo para debugging
+                if (data.rows && data.rows.length > 0) {
+                    console.log('📝 Primeros valores encontrados:', data.rows.slice(0, 10).map(row => row[statusColumn]));
+                }
             } else {
                 // Si no hay columna de estado, contar todas las filas con datos
                 // Esto asume que cada fila (excepto el header) representa un ticket vendido
@@ -462,13 +482,19 @@ class TicketsCounter {
                 
                 totalSold = totalRows;
                 console.log(`📊 Total de filas con datos: ${totalSold}`);
+                console.warn('⚠️ No se detectó columna de estado. Contando todas las filas con datos.');
             }
 
             // Actualizar contador con animación
+            console.log(`🎯 Actualizando contador: ${totalSold} tickets vendidos/reservados de ${this.totalTickets} totales`);
             this.animateToValue(totalSold);
             this.hideLoadingState();
         } catch (error) {
             console.error('❌ Error al cargar tickets desde Google Sheets:', error);
+            console.error('Detalles del error:', {
+                message: error.message,
+                stack: error.stack
+            });
             this.hideLoadingState();
             this.showErrorState();
         } finally {
