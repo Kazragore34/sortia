@@ -11,7 +11,7 @@ const CONFIG = {
     totalTickets: 1000, // Tickets del 000 al 999
     ticketPrice: 8, // euros
     minTickets: 2,
-    whatsappNumber: '722539447', // Número de WhatsApp
+    whatsappNumber: '34614465691', // Número de WhatsApp (sin el +)
     // Configuración de Google Sheets
     googleSheets: {
         // ID del Google Sheet
@@ -512,8 +512,11 @@ class TicketsCounter {
             }
 
             // Actualizar contador con animación
-            console.log(`🎯 Actualizando contador: ${totalSold} tickets vendidos/reservados de ${this.totalTickets} totales`);
-            this.animateToValue(totalSold);
+            // Usar directamente el conteo de disponibles para evitar errores
+            const ticketsDisponibles = totalAvailable > 0 ? totalAvailable : (this.totalTickets - totalSold);
+            console.log(`🎯 Actualizando contador: ${ticketsDisponibles} tickets disponibles (contados directamente)`);
+            // Animar mostrando los disponibles directamente
+            this.animateToAvailable(ticketsDisponibles);
             this.hideLoadingState();
         } catch (error) {
             console.error('❌ Error al cargar tickets desde Google Sheets:', error);
@@ -581,6 +584,55 @@ class TicketsCounter {
                 if (this.elements.progress) {
                     this.elements.progress.style.width = `${100 - targetPercentage}%`;
                 }
+            }
+        };
+
+        this.animationFrame = requestAnimationFrame(animate);
+    }
+
+    /**
+     * Anima el contador mostrando directamente el número de tickets disponibles
+     * (cuenta directamente los "disponible" en lugar de calcular)
+     */
+    animateToAvailable(targetAvailable) {
+        const targetSold = this.totalTickets - targetAvailable;
+        this.soldTickets = targetSold;
+        const targetPercentage = (targetSold / this.totalTickets) * 100;
+        const startValue = this.currentDisplay || 0;
+        const duration = 2000; // 2 segundos
+        const startTime = performance.now();
+
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Easing function (ease-out)
+            const easeOut = 1 - Math.pow(1 - progress, 3);
+            
+            // Calcular valor actual (directamente los disponibles)
+            const currentAvailable = Math.floor(startValue + (targetAvailable - startValue) * easeOut);
+            const currentPercentage = 100 - ((targetSold / this.totalTickets) * 100 * easeOut);
+
+            // Actualizar display
+            if (this.elements.remaining) {
+                this.elements.remaining.textContent = currentAvailable;
+            }
+
+            if (this.elements.progress) {
+                this.elements.progress.style.width = `${currentPercentage}%`;
+            }
+
+            if (progress < 1) {
+                this.animationFrame = requestAnimationFrame(animate);
+            } else {
+                // Asegurar valores finales exactos
+                if (this.elements.remaining) {
+                    this.elements.remaining.textContent = targetAvailable;
+                }
+                if (this.elements.progress) {
+                    this.elements.progress.style.width = `${100 - targetPercentage}%`;
+                }
+                this.currentDisplay = targetAvailable;
             }
         };
 
