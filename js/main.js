@@ -11,7 +11,21 @@ const CONFIG = {
     totalTickets: 1000, // Tickets del 000 al 999
     ticketPrice: 8, // euros
     minTickets: 2,
-    whatsappNumber: '722539447' // Número de WhatsApp
+    whatsappNumber: '722539447', // Número de WhatsApp
+    // Configuración de Google Sheets
+    googleSheets: {
+        // URL completa del Google Sheet
+        sheetId: '11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s',
+        // Nombre de la hoja (pestaña) a leer. Por defecto 'Sheet1'
+        sheetName: 'Sheet1',
+        // Método de lectura: 'csv' (más simple, requiere sheet público), 'api' (requiere API key), 'appsscript' (requiere script desplegado)
+        method: 'csv',
+        // Opciones adicionales según el método
+        options: {
+            // Para método 'api': apiKey: 'TU_API_KEY_AQUI'
+            // Para método 'appsscript': scriptUrl: 'URL_DEL_SCRIPT_AQUI'
+        }
+    }
 };
 
 // ============================================
@@ -80,36 +94,342 @@ class CountdownTimer {
 }
 
 // ============================================
+// LECTOR DE GOOGLE SHEETS
+// ============================================
+class GoogleSheetsReader {
+    constructor(sheetId, sheetName = 'Sheet1') {
+        // Extraer el ID del sheet de la URL completa
+        // URL formato: https://docs.google.com/spreadsheets/d/SHEET_ID/edit...
+        this.sheetId = sheetId.includes('/d/') 
+            ? sheetId.split('/d/')[1].split('/')[0] 
+            : sheetId;
+        this.sheetName = sheetName;
+        this.cache = null;
+        this.cacheTime = 0;
+        this.cacheDuration = 30000; // 30 segundos de caché
+    }
+
+    /**
+     * Lee los datos del Google Sheet usando Google Apps Script como endpoint público
+     * Opción 1: Si tienes un Google Apps Script desplegado
+     */
+    async fetchFromAppsScript(scriptUrl) {
+        try {
+            const response = await fetch(scriptUrl, {
+                method: 'GET',
+                cache: 'no-cache'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error al leer desde Google Apps Script:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Lee los datos del Google Sheet publicándolo como CSV
+     * Opción 2: Más simple, pero requiere que el sheet sea público
+     */
+    async fetchFromCSV() {
+        try {
+            const csvUrl = `https://docs.google.com/spreadsheets/d/${this.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(this.sheetName)}`;
+            
+            const response = await fetch(csvUrl, {
+                method: 'GET',
+                cache: 'no-cache'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const csvText = await response.text();
+            return this.parseCSV(csvText);
+        } catch (error) {
+            console.error('Error al leer CSV de Google Sheets:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Lee los datos usando la API de Google Sheets (requiere API key pública)
+     * Opción 3: Usando la API pública de Google Sheets
+     */
+    async fetchFromAPI(apiKey) {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${this.sheetId}/values/${encodeURIComponent(this.sheetName)}?key=${apiKey}`;
+            
+            const response = await fetch(url, {
+                method: 'GET',
+                cache: 'no-cache'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return this.parseAPIResponse(data);
+        } catch (error) {
+            console.error('Error al leer desde Google Sheets API:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Método principal: Intenta leer usando el método más adecuado
+     */
+    async fetchData(method = 'csv', options = {}) {
+        // Verificar caché
+        const now = Date.now();
+        if (this.cache && (now - this.cacheTime) < this.cacheDuration) {
+            return this.cache;
+        }
+
+        let data;
+        try {
+            switch (method) {
+                case 'appsscript':
+                    if (!options.scriptUrl) {
+                        throw new Error('Se requiere scriptUrl para el método appsscript');
+                    }
+                    data = await this.fetchFromAppsScript(options.scriptUrl);
+                    break;
+                case 'api':
+                    if (!options.apiKey) {
+                        throw new Error('Se requiere apiKey para el método api');
+                    }
+                    data = await this.fetchFromAPI(options.apiKey);
+                    break;
+                case 'csv':
+                default:
+                    data = await this.fetchFromCSV();
+                    break;
+            }
+
+            // Actualizar caché
+            this.cache = data;
+            this.cacheTime = now;
+            
+            return data;
+        } catch (error) {
+            console.error('Error al obtener datos de Google Sheets:', error);
+            // Si hay caché, devolverlo aunque esté desactualizado
+            if (this.cache) {
+                console.warn('Usando datos en caché debido a error');
+                return this.cache;
+            }
+            throw error;
+        }
+    }
+
+    /**
+     * Parsea CSV a objeto JavaScript
+     */
+    parseCSV(csvText) {
+        const lines = csvText.split('\n').filter(line => line.trim());
+        if (lines.length === 0) return { rows: [] };
+
+        const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+        const rows = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            const values = this.parseCSVLine(lines[i]);
+            const row = {};
+            headers.forEach((header, index) => {
+                row[header] = values[index] || '';
+            });
+            rows.push(row);
+        }
+
+        return { headers, rows };
+    }
+
+    /**
+     * Parsea una línea CSV considerando comillas
+     */
+    parseCSVLine(line) {
+        const values = [];
+        let current = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                values.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        values.push(current.trim());
+        
+        return values;
+    }
+
+    /**
+     * Parsea respuesta de la API de Google Sheets
+     */
+    parseAPIResponse(data) {
+        if (!data.values || data.values.length === 0) {
+            return { rows: [] };
+        }
+
+        const headers = data.values[0];
+        const rows = [];
+
+        for (let i = 1; i < data.values.length; i++) {
+            const row = {};
+            headers.forEach((header, index) => {
+                row[header] = data.values[i][index] || '';
+            });
+            rows.push(row);
+        }
+
+        return { headers, rows };
+    }
+
+    /**
+     * Cuenta tickets vendidos (asume que hay una columna de estado)
+     */
+    countSoldTickets(data, statusColumn = 'Estado', soldValue = 'vendido') {
+        if (!data.rows) return 0;
+        
+        return data.rows.filter(row => {
+            const status = (row[statusColumn] || '').toLowerCase().trim();
+            return status === soldValue.toLowerCase() || status === 'reservado';
+        }).length;
+    }
+
+    /**
+     * Cuenta tickets disponibles
+     */
+    countAvailableTickets(data, statusColumn = 'Estado', availableValue = 'disponible') {
+        if (!data.rows) return 0;
+        
+        return data.rows.filter(row => {
+            const status = (row[statusColumn] || '').toLowerCase().trim();
+            return status === availableValue.toLowerCase();
+        }).length;
+    }
+}
+
+// ============================================
 // CONTADOR DE TICKETS
 // ============================================
 class TicketsCounter {
-    constructor(totalTickets) {
+    constructor(totalTickets, googleSheetsConfig = null) {
         this.totalTickets = totalTickets;
-        this.soldTickets = 0; // Esto debería venir de una API en producción
-        this.currentDisplay = 0; // Valor actual mostrado (para animación)
+        this.soldTickets = 0;
+        this.currentDisplay = 0;
         this.elements = {
             remaining: document.getElementById('tickets-remaining'),
             progress: document.getElementById('tickets-progress')
         };
         this.animationFrame = null;
+        this.googleSheets = googleSheetsConfig ? new GoogleSheetsReader(
+            googleSheetsConfig.sheetId,
+            googleSheetsConfig.sheetName || 'Sheet1'
+        ) : null;
+        this.updateInterval = null;
+        this.isLoading = false;
         this.init();
     }
 
-    init() {
+    async init() {
         // Iniciar en 0
         this.currentDisplay = 0;
         this.soldTickets = 0;
         
-        // Simulación: En producción esto vendría de una API
-        // Por ahora, usar un valor de ejemplo. Luego se conectará a Excel
-        const targetSold = Math.floor(Math.random() * 200); // Simulación
-        
-        // Animar desde 0 hasta el valor objetivo
-        this.animateToValue(targetSold);
-        
-        // Simular ventas aleatorias (solo para demo)
-        // En producción, esto se actualizaría desde el servidor
-        // setInterval(() => this.simulateSale(), 5000);
+        // Si hay configuración de Google Sheets, cargar datos reales
+        if (this.googleSheets) {
+            await this.loadFromGoogleSheets();
+            // Actualizar cada 30 segundos
+            this.updateInterval = setInterval(() => {
+                this.loadFromGoogleSheets();
+            }, 30000);
+        } else {
+            // Fallback: usar valor simulado (solo para desarrollo)
+            console.warn('⚠️ No hay configuración de Google Sheets. Usando valores simulados.');
+            const targetSold = Math.floor(Math.random() * 200);
+            this.animateToValue(targetSold);
+        }
+    }
+
+    async loadFromGoogleSheets() {
+        if (!this.googleSheets || this.isLoading) return;
+
+        this.isLoading = true;
+        this.showLoadingState();
+
+        try {
+            // Intentar leer usando CSV (método más simple)
+            const data = await this.googleSheets.fetchData('csv');
+            
+            // Intentar detectar la columna de estado automáticamente
+            // Buscar columnas comunes: 'Estado', 'Status', 'estado', 'status', etc.
+            const statusColumns = ['Estado', 'Status', 'estado', 'status', 'ESTADO', 'STATUS', 'Estado del Ticket'];
+            let statusColumn = null;
+            
+            if (data.headers) {
+                statusColumn = data.headers.find(h => statusColumns.includes(h));
+            }
+
+            let totalSold = 0;
+
+            if (statusColumn) {
+                // Contar tickets vendidos y reservados
+                const sold = this.googleSheets.countSoldTickets(data, statusColumn, 'vendido');
+                const reserved = this.googleSheets.countSoldTickets(data, statusColumn, 'reservado');
+                totalSold = sold + reserved;
+                
+                console.log(`📊 Tickets vendidos: ${sold}, Reservados: ${reserved}, Total: ${totalSold}`);
+            } else {
+                // Si no hay columna de estado, contar todas las filas con datos
+                // Esto asume que cada fila (excepto el header) representa un ticket vendido
+                const totalRows = data.rows ? data.rows.filter(row => {
+                    // Filtrar filas vacías
+                    return Object.values(row).some(value => value && value.toString().trim() !== '');
+                }).length : 0;
+                
+                totalSold = totalRows;
+                console.log(`📊 Total de filas con datos: ${totalSold}`);
+            }
+
+            // Actualizar contador con animación
+            this.animateToValue(totalSold);
+            this.hideLoadingState();
+        } catch (error) {
+            console.error('❌ Error al cargar tickets desde Google Sheets:', error);
+            this.hideLoadingState();
+            this.showErrorState();
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    showLoadingState() {
+        if (this.elements.remaining) {
+            this.elements.remaining.textContent = '...';
+        }
+    }
+
+    hideLoadingState() {
+        // El estado de carga se oculta cuando se actualiza el valor
+    }
+
+    showErrorState() {
+        // Mantener el último valor conocido en caso de error
+        console.warn('⚠️ No se pudo actualizar el contador. Mostrando último valor conocido.');
     }
 
     animateToValue(targetSold) {
@@ -612,8 +932,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar contador de tiempo
     const countdown = new CountdownTimer(CONFIG.deadline);
     
-    // Inicializar contador de tickets
-    const ticketsCounter = new TicketsCounter(CONFIG.totalTickets);
+    // Inicializar contador de tickets con configuración de Google Sheets
+    const ticketsCounter = new TicketsCounter(
+        CONFIG.totalTickets,
+        CONFIG.googleSheets ? {
+            sheetId: CONFIG.googleSheets.sheetId,
+            sheetName: CONFIG.googleSheets.sheetName || 'Sheet1'
+        } : null
+    );
     
     // Inicializar calculadora personalizada
     const calculator = new CustomTicketCalculator();
