@@ -16,8 +16,8 @@ const CONFIG = {
     googleSheets: {
         // ID del Google Sheet
         sheetId: '11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s',
-        // Nombre de la hoja (pestaña) a leer. Por defecto 'Sheet1'
-        sheetName: 'Sheet1',
+        // Nombre de la hoja (pestaña) a leer
+        sheetName: 'Hoja 1',
         // Método de lectura: 'csv' (más simple, requiere sheet público), 'api' (requiere API key), 'appsscript' (requiere script desplegado)
         method: 'api', // Cambiar a 'api' para usar la API de Google Sheets
         // Opciones adicionales según el método
