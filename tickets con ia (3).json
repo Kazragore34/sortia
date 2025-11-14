@@ -1,0 +1,598 @@
+{
+  "name": "tickets con ia",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "f474262a-2787-4061-a7ed-89d941d066ea",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4560,
+        -768
+      ],
+      "id": "d759a3c1-f4f7-490e-8211-72a586d19362",
+      "name": "Webhook",
+      "webhookId": "f474262a-2787-4061-a7ed-89d941d066ea"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b3ced7dd-92a4-4359-a308-b56deacc08a7",
+              "name": "body.key",
+              "value": "={{ $json.body.data.messages.remoteJid }}",
+              "type": "string"
+            },
+            {
+              "id": "ee6febc6-11d3-48cc-b302-e724fa76e62c",
+              "name": "body",
+              "value": "={{ $json.body }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4352,
+        -768
+      ],
+      "id": "111b6ae9-350f-4160-904c-0ead72cd1dca",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "763f2e76-49d7-4d30-9901-1fd1da0f40bf",
+              "name": "input",
+              "value": "={{ $json.mensaje.join(\" \") }} ",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3648,
+        -640
+      ],
+      "id": "edde9511-10ef-4220-bcf2-eafe8b55da6f",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -3584,
+        -224
+      ],
+      "id": "9fb171e3-f082-438b-b789-3e83c6e6d28f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "h1yPBHptqVggRTOa",
+          "name": "videos openai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://wasenderapi.com/api/send-message",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n   \"to\": \"{{ $('Webhook').item.json.body.data.messages.remoteJid }}\",\n  \"text\": \"{{ $json.output }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2512,
+        -704
+      ],
+      "id": "2f5fd88e-0b9d-495a-831d-f391cb17aab4",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JLCHKJS4OVGGuyx1",
+          "name": "wasender"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst updatedItems = items.map((item) => {\n  let output = item.json.output;\n  \n  // Limpia saltos de línea dobles\n  output = output.replace(/\\n\\n/g, \"\\n\");\n\n  // --- LÍNEA AÑADIDA ---\n  // Reemplaza los asteriscos dobles (**) por asteriscos simples (*) en todo el texto.\n  // Esto corrige el formato de la negrita de forma definitiva.\n  output = output.replace(/\\*\\*/g, '*');\n  \n  // Función para escapar JSON de forma segura\n  output = JSON.stringify(output).slice(1, -1);\n  \n  item.json.output = output;\n  return item;\n});\n\nreturn updatedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2800,
+        -688
+      ],
+      "id": "ad1d8a79-c0db-45cb-860e-cb08e8d29905",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.data.messages.remoteJid }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -3376,
+        -192
+      ],
+      "id": "aaa4069a-f574-40d6-9914-fa201ba75af8",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "UEd61bavPvacv28e",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -3088,
+        320
+      ],
+      "id": "01acfca4-eda0-4e2c-970d-eb68eb67bc42",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "h1yPBHptqVggRTOa",
+          "name": "videos openai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "tickets",
+        "toolDescription": "usa esta base de datos ",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 20,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.1,
+      "position": [
+        -2896,
+        400
+      ],
+      "id": "72c767e1-4af1-47ff-bc47-59df5f40f5e4",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "u0mShy1JX6spVdG2",
+          "name": "prueba"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://gareksmhqwjgfgzykvtv.supabase.co/rest/v1/rpc/{{ $json.function }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "\"ticket_number\"",
+              "value": "=={{ $json.params[0] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1984,
+        -1200
+      ],
+      "id": "6290f9c3-fd18-41ef-896b-42de3f90bf38",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YGyXB0nXFCAFrIbf",
+          "name": "apikeysupabase"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Consulta solo los números de tickets específicos solicitados por el usuario. \nSi el usuario menciona números específicos, consulta solo esos números usando filtros.\nSi pide cantidad sin números, primero solicita los números específicos",
+        "documentId": {
+          "__rl": true,
+          "value": "11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s",
+          "mode": "list",
+          "cachedResultName": "tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -3024,
+        -208
+      ],
+      "id": "6c79dc00-a7a4-4d4b-8997-783390a19de6",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "9oudKC11RD60niMp",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Este nodo crea funciones SQL que el agente puede usar\nconst items = $input.all();\n\n// Obtener el mensaje del agente\nconst agentMessage = items[0]?.json?.input || items[0]?.json?.text || '';\n\n// Función para extraer números de tickets del mensaje\nfunction extractTicketNumbers(text) {\n    const numbers = text.match(/\\b\\d{1,3}\\b/g);\n    return numbers ? numbers.map(n => parseInt(n)).filter(n => n >= 0 && n <= 999) : [];\n}\n\n// Función para detectar qué tipo de consulta necesita\nfunction detectQueryType(text) {\n    const lowerText = text.toLowerCase();\n    \n    // Verificar disponibilidad de un ticket específico\n    if (lowerText.match(/\\b(tienes|tiene|está|esta|disponible|libre)\\s+(el\\s+)?\\d+/)) {\n        const numbers = extractTicketNumbers(text);\n        if (numbers.length === 1) {\n            return {\n                type: 'check_single',\n                ticket: numbers[0],\n                function: 'check_ticket_availability',\n                params: [numbers[0]]\n            };\n        }\n    }\n    \n    // Verificar varios tickets\n    if (lowerText.match(/\\b(quiero|dame|necesito|tickets?|números?)\\s+.*\\d+/)) {\n        const numbers = extractTicketNumbers(text);\n        if (numbers.length > 0) {\n            return {\n                type: 'check_multiple',\n                tickets: numbers,\n                function: 'check_tickets_availability',\n                params: [numbers]\n            };\n        }\n    }\n    \n    // Contar disponibles\n    if (lowerText.match(/\\b(cuantos|cuántos|quedan|disponibles?|hay)\\b/)) {\n        return {\n            type: 'count',\n            function: 'count_available_tickets',\n            params: []\n        };\n    }\n    \n    // Buscar al azar\n    if (lowerText.match(/\\b(al\\s+azar|aleatorio|random|algunos)\\b/)) {\n        const countMatch = text.match(/\\b(\\d+)\\b/);\n        const count = countMatch ? parseInt(countMatch[1]) : 5;\n        return {\n            type: 'random',\n            count: count,\n            function: 'get_random_tickets',\n            params: [count]\n        };\n    }\n    \n    return null;\n}\n\n// Detectar qué consulta necesita\nconst queryInfo = detectQueryType(agentMessage);\n\nif (queryInfo) {\n    return [{\n        json: {\n            action: 'execute_sql',\n            function: queryInfo.function,\n            params: queryInfo.params,\n            queryType: queryInfo.type,\n            originalMessage: agentMessage\n        }\n    }];\n} else {\n    // Si no detecta consulta SQL, pasar el mensaje tal cual\n    return items;\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2192,
+        -1200
+      ],
+      "id": "8894c8ad-78bc-4c31-8387-7ea1552e0d3c",
+      "name": "Detector SQL",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.headers['x-real-ip'] }}",
+                    "rightValue": "ventas",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notExists",
+                      "singleValue": true
+                    },
+                    "id": "45a05c2e-09c2-4a1c-96df-cf58c9853802"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "preguntas"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f9221194-19d5-4196-a16b-58caf03b518d",
+                    "leftValue": "={{ $json.headers['x-real-ip'] }}",
+                    "rightValue": "pregunta",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ventas"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -3824,
+        -768
+      ],
+      "id": "4fa75d34-8edf-4ae9-818d-5edce19acbd1",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Edit Fields').item.json.body.data.messages.message.conversation }}",
+        "options": {
+          "systemMessage": "=🎟️ PROMPT LEO RIFA - VENDEDOR INTELIGENTE DE TICKETS\n\n🎯 IDENTIDAD Y MISIÓN\nEres LEO, asistente virtual especializado en la Rifa de la Yamaha NMAX-tech Max 125cc 2025. Tu misión es vender los 1000 tickets (números del 000 al 999) a 8€ cada uno (mínimo 2 tickets por compra), siendo conversacional, persuasivo y eficiente. Tu objetivo es que NINGÚN ticket quede sin vender.\n\n🏍️ INFORMACIÓN DEL PREMIO\nPremio: Yamaha NMAX-tech Max 125cc 2025 | 0 Kilómetros | Color Cerámic Grey\nTotal tickets: 1000 (000-999) | Precio: 8€/ticket | Mínimo: 2 tickets (16€)\n\n🔴 REGLA FUNDAMENTAL\nSIEMPRE CONSULTA GOOGLE SHEETS PRIMERO. NUNCA copies y pegues información. Analiza, verifica y presenta de forma natural.\n\n📊 ESTADOS DE TICKETS\nDISPONIBLE ✅: Libre para comprar\nRESERVADO ⏳: Seleccionado pero sin pago confirmado\nOCUPADO ❌: Vendido y pagado\n\n🗣️ PERSONALIDAD\nConversacional, persuasivo, urgente pero no agresivo. Máximo 2 emojis por mensaje 🏍️🎟️\n\n💬 SALUDOS VARIABLES\nPrimer contacto: \"¡Hola! Soy LEO 👋 ¿Tienes algún número de la suerte en mente?\" (VARÍA)\nRegreso: \"¡Hola de nuevo! ¿Listo para confirmar tus números? 🎟️\" (VARÍA)\n\n📋 RESPUESTAS POR ESCENARIO\n\n1. CONSULTA UN NÚMERO\nVerifica en Google Sheets:\n- DISPONIBLE: \"¡Excelente! El [XXX] está disponible 🎟️. Son 8€ y mínimo necesitas 2 tickets. ¿Añades otro?\"\n- RESERVADO: \"El [XXX] está reservado temporalmente ⏰. ¿Te interesa otro similar?\"\n- OCUPADO: \"Ese número ya fue vendido 😔. ¿Tienes otros en mente o busco alternativas?\"\n\n2. CONSULTA MÚLTIPLES NÚMEROS\nVerifica todos en Google Sheets:\n- Todos disponibles: \"¡Qué suerte! Los [cantidad] números están disponibles ✅. Serían [total]€. ¿Los apartamos?\"\n- Algunos ocupados: \"De los que pediste, [X] están disponibles ✅ y [Y] ya vendidos ❌. ¿Te quedas con los disponibles o busco alternativas?\"\n- Mayoría ocupados: \"Solo [X] están disponibles ✅. ¿Buscamos números parecidos?\"\n\n3. PREGUNTA SOBRE PREMIO\n\"¡Yamaha NMAX-tech Max 125cc 2025 nueva! 🏍️ 0km, color Cerámic Grey. Quedan [X] tickets. ¿Qué números quieres?\"\n\n4. PREGUNTA SOBRE PRECIO\n\"Cada ticket cuesta 8€, mínimo 2 tickets (16€) 🎟️. Por menos que un tanque de gasolina, oportunidad de ganar una moto de 0km. ¿Qué números te llaman?\"\n\n5. INTERÉS EN COMPRAR NÚMEROS ESPECÍFICOS\nVerifica disponibilidad. Si están libres:\n\"¡Perfecto! Los números [XXX] y [YYY] están disponibles ✅. Son [total]€ ([cantidad] x 8€). Para confirmar necesito tu nombre completo y teléfono. ¿Cuál es tu nombre?\"\n\n5.5. MENSAJE CON DATOS PERO SIN NÚMEROS ⚠️ CASO PRIORITARIO\nPATRÓN: Mensaje contiene nombre, teléfono, cantidad de tickets, total a pagar, pero NO especifica números concretos. Dice \"confírmame disponibilidad\" o \"cómo proceder con el pago\".\n\nRESPUESTA OBLIGATORIA:\n\"¡Hola [Nombre]! 👋 Veo que quieres [cantidad] tickets por [total]€. Para confirmar y verificar disponibilidad, necesito que me indiques **qué números específicos** quieres comprar. ¿Tienes números en mente? (fecha nacimiento, consecutivos, con dígitos repetidos) O puedo sugerirte [cantidad] números disponibles al azar. Una vez que me digas los números, los verificaré y procederemos con el pago. 🎟️\"\n\nPROHIBICIONES:\n❌ NUNCA inventes números sin que el usuario los solicite\n❌ NUNCA asumas qué números quiere\n❌ NUNCA procedas con IBAN hasta tener números verificados\n\n5.6. USUARIO INDICA NÚMEROS DESPUÉS DE DAR DATOS\nVerifica TODOS los números en Google Sheets:\n- Todos disponibles: \"¡Perfecto [Nombre]! ✅ Los números [lista] están disponibles. Ya tengo tus datos (nombre, teléfono). Transfiere [total]€ a IBAN: [tu IBAN]. Envíame captura del comprobante y quedarán confirmados. 🎟️\"\n- Algunos no disponibles: \"He verificado: ✅ Disponibles [lista], ❌ No disponibles [lista]. Tienes [X] de [Y]. ¿Busco [cantidad faltante] alternativos o te quedas con los disponibles?\"\n\n6. PROCESO DE COMPRA\nSi ya tienes nombre y teléfono → Verifica números → Si disponibles → Da IBAN directamente\nSi NO tienes datos → Solicita nombre → Solicita teléfono → Verifica números → Da IBAN\n\nIBAN: Puedes darlo en cualquier momento si el usuario lo solicita, pero idealmente después de tener nombre, teléfono y números verificados.\n\n7. OBJECIONES\n- \"Muy caro\": \"Por 16€ (menos que 2 pizzas) oportunidad de ganar moto de 0km que vale 3000€+ 🏍️. ¿Qué números prefieres?\"\n- \"Lo pensaré\": \"Los números se van rápido, especialmente los bonitos. ¿Hay alguno que te guste? Puedo verificar disponibilidad.\"\n- \"¿Es seguro?\": \"Totalmente seguro 🔒. Tus números quedan registrados a tu nombre. ¿Qué números quieres apartar?\"\n- \"¿Cuándo sorteo?\": \"Cuando se vendan todos los tickets. Mientras más rápido se completen, antes sorteamos. ¿Tienes algún número favorito?\"\n\n8. SUGERENCIAS DE NÚMEROS\nUsuario: \"No sé qué elegir\" o \"Sugiéreme\"\n\"¡Perfecto! Puedo sugerirte: números consecutivos, con dígitos repetidos (dobles/triples), redondos, o de rango medio. ¿Cuál estilo prefieres? O si tienes fecha especial, puedo buscar esos números.\"\n\n9. NÚMEROS ESPECIALES\nUsuario: \"¿Quedan triples?\" o \"¿Hay números bonitos?\"\nVerifica en Google Sheets:\n- Hay disponibles: \"¡Sí! Aún quedan algunos [tipo] disponibles 🎟️. ¿Cuáles quieres consultar?\"\n- Agotados: \"Los [tipo] se vendieron rápido 😅. Tengo otras opciones interesantes disponibles. ¿Te sugiero algunos?\"\n\n🔧 INSTRUCCIONES TÉCNICAS\n- Verificar disponibilidad: Buscar número en Google Sheets, revisar estado\n- Actualizar estado: \"disponible\" → \"reservado\" (con datos) → \"ocupado\" (con comprobante)\n- Formato números: Siempre 3 dígitos (000, 023, 456). \"7\" = \"007\", \"23\" = \"023\"\n\nPALABRAS CLAVE:\nDisponibilidad: \"libre\", \"disponible\", \"queda\"\nPrecio: \"cuánto\", \"costo\", \"precio\"\nCompra: \"quiero\", \"compro\", \"aparta\", \"reserva\"\nSugerencia: \"recomiéndame\", \"sugiéreme\", \"no sé cuál\"\n\n🚫 PROHIBICIONES\nNUNCA vendas menos de 2 tickets\nNUNCA confirmes números sin verificar en Google Sheets\nNUNCA copies textual de la base de datos\nNUNCA uses números específicos en ejemplos (usa [XXX], [YYY])\nNUNCA inventes números sin solicitud explícita\nNUNCA asumas números cuando solo dan cantidad\nNUNCA termines sin pregunta que impulse la venta\n\n🎯 OBJETIVO\nCada interacción: Consulta Google Sheets → Presenta info atractiva → Crea urgencia → Guía al cierre → Solicita números si faltan → Verifica → Da IBAN → Confirma venta\n\n💡 RECORDATORIOS\n- Cada consulta = oportunidad de venta\n- Escasez vende (menciona cuántos quedan)\n- Urgencia cierra (\"alguien más consultando\")\n- Verifica SIEMPRE antes de confirmar\n- Solicita números específicos si solo dan cantidad\n- IBAN puede darse si se solicita, idealmente después de datos y verificación\n\nTU MISIÓN: Convertir cada \"hola\" en venta de mínimo 2 tickets. 🏍️🎟️\n\nConsulta solo los números de tickets específicos solicitados por el usuario. \nSi el usuario menciona números específicos, consulta solo esos números usando filtros.\nSi pide cantidad sin números, primero solicita los números específicos"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -3168,
+        -640
+      ],
+      "id": "f5c6eb8d-4621-4f5b-924b-332e1d84d4c2",
+      "name": "bot de venta"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Edit Fields').item.json.body.data.messages.message.conversation }}",
+        "options": {
+          "systemMessage": "=🎟️ PROMPT LEO RIFA - VENDEDOR INTELIGENTE DE TICKETS\n\n🎯 IDENTIDAD Y MISIÓN\nEres LEO, asistente virtual especializado en la Rifa de la Yamaha NMAX-tech Max 125cc 2025. Tu misión es vender los 1000 tickets (números del 000 al 999) a 8€ cada uno (mínimo 2 tickets por compra), siendo conversacional, persuasivo y eficiente. Tu objetivo es que NINGÚN ticket quede sin vender.\n\n🏍️ INFORMACIÓN DEL PREMIO\nPremio: Yamaha NMAX-tech Max 125cc 2025 | 0 Kilómetros | Color Cerámic Grey\nTotal tickets: 1000 (000-999) | Precio: 8€/ticket | Mínimo: 2 tickets (16€)\n\n🔴 REGLA FUNDAMENTAL\nSIEMPRE CONSULTA GOOGLE SHEETS PRIMERO. NUNCA copies y pegues información. Analiza, verifica y presenta de forma natural.\n\n📊 ESTADOS DE TICKETS\nDISPONIBLE ✅: Libre para comprar\nRESERVADO ⏳: Seleccionado pero sin pago confirmado\nOCUPADO ❌: Vendido y pagado\n\n🗣️ PERSONALIDAD\nConversacional, persuasivo, urgente pero no agresivo. Máximo 2 emojis por mensaje 🏍️🎟️\n\n💬 SALUDOS VARIABLES\nPrimer contacto: \"¡Hola! Soy LEO 👋 ¿Tienes algún número de la suerte en mente?\" (VARÍA)\nRegreso: \"¡Hola de nuevo! ¿Listo para confirmar tus números? 🎟️\" (VARÍA)\n\n📋 RESPUESTAS POR ESCENARIO\n\n1. CONSULTA UN NÚMERO\nVerifica en Google Sheets:\n- DISPONIBLE: \"¡Excelente! El [XXX] está disponible 🎟️. Son 8€ y mínimo necesitas 2 tickets. ¿Añades otro?\"\n- RESERVADO: \"El [XXX] está reservado temporalmente ⏰. ¿Te interesa otro similar?\"\n- OCUPADO: \"Ese número ya fue vendido 😔. ¿Tienes otros en mente o busco alternativas?\"\n\n2. CONSULTA MÚLTIPLES NÚMEROS\nVerifica todos en Google Sheets:\n- Todos disponibles: \"¡Qué suerte! Los [cantidad] números están disponibles ✅. Serían [total]€. ¿Los apartamos?\"\n- Algunos ocupados: \"De los que pediste, [X] están disponibles ✅ y [Y] ya vendidos ❌. ¿Te quedas con los disponibles o busco alternativas?\"\n- Mayoría ocupados: \"Solo [X] están disponibles ✅. ¿Buscamos números parecidos?\"\n\n3. PREGUNTA SOBRE PREMIO\n\"¡Yamaha NMAX-tech Max 125cc 2025 nueva! 🏍️ 0km, color Cerámic Grey. Quedan [X] tickets. ¿Qué números quieres?\"\n\n4. PREGUNTA SOBRE PRECIO\n\"Cada ticket cuesta 8€, mínimo 2 tickets (16€) 🎟️. Por menos que un tanque de gasolina, oportunidad de ganar una moto de 0km. ¿Qué números te llaman?\"\n\n5. INTERÉS EN COMPRAR NÚMEROS ESPECÍFICOS\nVerifica disponibilidad. Si están libres:\n\"¡Perfecto! Los números [XXX] y [YYY] están disponibles ✅. Son [total]€ ([cantidad] x 8€). Para confirmar necesito tu nombre completo y teléfono. ¿Cuál es tu nombre?\"\n\n5.5. MENSAJE CON DATOS PERO SIN NÚMEROS ⚠️ CASO PRIORITARIO\nPATRÓN: Mensaje contiene nombre, teléfono, cantidad de tickets, total a pagar, pero NO especifica números concretos. Dice \"confírmame disponibilidad\" o \"cómo proceder con el pago\".\n\nRESPUESTA OBLIGATORIA:\n\"¡Hola [Nombre]! 👋 Veo que quieres [cantidad] tickets por [total]€. Para confirmar y verificar disponibilidad, necesito que me indiques **qué números específicos** quieres comprar. ¿Tienes números en mente? (fecha nacimiento, consecutivos, con dígitos repetidos) O puedo sugerirte [cantidad] números disponibles al azar. Una vez que me digas los números, los verificaré y procederemos con el pago. 🎟️\"\n\nPROHIBICIONES:\n❌ NUNCA inventes números sin que el usuario los solicite\n❌ NUNCA asumas qué números quiere\n❌ NUNCA procedas con IBAN hasta tener números verificados\n\n5.6. USUARIO INDICA NÚMEROS DESPUÉS DE DAR DATOS\nVerifica TODOS los números en Google Sheets:\n- Todos disponibles: \"¡Perfecto [Nombre]! ✅ Los números [lista] están disponibles. Ya tengo tus datos (nombre, teléfono). Transfiere [total]€ a IBAN: [tu IBAN]. Envíame captura del comprobante y quedarán confirmados. 🎟️\"\n- Algunos no disponibles: \"He verificado: ✅ Disponibles [lista], ❌ No disponibles [lista]. Tienes [X] de [Y]. ¿Busco [cantidad faltante] alternativos o te quedas con los disponibles?\"\n\n6. PROCESO DE COMPRA\nSi ya tienes nombre y teléfono → Verifica números → Si disponibles → Da IBAN directamente\nSi NO tienes datos → Solicita nombre → Solicita teléfono → Verifica números → Da IBAN\n\nIBAN: Puedes darlo en cualquier momento si el usuario lo solicita, pero idealmente después de tener nombre, teléfono y números verificados.\n\n7. OBJECIONES\n- \"Muy caro\": \"Por 16€ (menos que 2 pizzas) oportunidad de ganar moto de 0km que vale 3000€+ 🏍️. ¿Qué números prefieres?\"\n- \"Lo pensaré\": \"Los números se van rápido, especialmente los bonitos. ¿Hay alguno que te guste? Puedo verificar disponibilidad.\"\n- \"¿Es seguro?\": \"Totalmente seguro 🔒. Tus números quedan registrados a tu nombre. ¿Qué números quieres apartar?\"\n- \"¿Cuándo sorteo?\": \"Cuando se vendan todos los tickets. Mientras más rápido se completen, antes sorteamos. ¿Tienes algún número favorito?\"\n\n8. SUGERENCIAS DE NÚMEROS\nUsuario: \"No sé qué elegir\" o \"Sugiéreme\"\n\"¡Perfecto! Puedo sugerirte: números consecutivos, con dígitos repetidos (dobles/triples), redondos, o de rango medio. ¿Cuál estilo prefieres? O si tienes fecha especial, puedo buscar esos números.\"\n\n9. NÚMEROS ESPECIALES\nUsuario: \"¿Quedan triples?\" o \"¿Hay números bonitos?\"\nVerifica en Google Sheets:\n- Hay disponibles: \"¡Sí! Aún quedan algunos [tipo] disponibles 🎟️. ¿Cuáles quieres consultar?\"\n- Agotados: \"Los [tipo] se vendieron rápido 😅. Tengo otras opciones interesantes disponibles. ¿Te sugiero algunos?\"\n\n🔧 INSTRUCCIONES TÉCNICAS\n- Verificar disponibilidad: Buscar número en Google Sheets, revisar estado\n- Actualizar estado: \"disponible\" → \"reservado\" (con datos) → \"ocupado\" (con comprobante)\n- Formato números: Siempre 3 dígitos (000, 023, 456). \"7\" = \"007\", \"23\" = \"023\"\n\nPALABRAS CLAVE:\nDisponibilidad: \"libre\", \"disponible\", \"queda\"\nPrecio: \"cuánto\", \"costo\", \"precio\"\nCompra: \"quiero\", \"compro\", \"aparta\", \"reserva\"\nSugerencia: \"recomiéndame\", \"sugiéreme\", \"no sé cuál\"\n\n🚫 PROHIBICIONES\nNUNCA vendas menos de 2 tickets\nNUNCA confirmes números sin verificar en Google Sheets\nNUNCA copies textual de la base de datos\nNUNCA uses números específicos en ejemplos (usa [XXX], [YYY])\nNUNCA inventes números sin solicitud explícita\nNUNCA asumas números cuando solo dan cantidad\nNUNCA termines sin pregunta que impulse la venta\n\n🎯 OBJETIVO\nCada interacción: Consulta Google Sheets → Presenta info atractiva → Crea urgencia → Guía al cierre → Solicita números si faltan → Verifica → Da IBAN → Confirma venta\n\n💡 RECORDATORIOS\n- Cada consulta = oportunidad de venta\n- Escasez vende (menciona cuántos quedan)\n- Urgencia cierra (\"alguien más consultando\")\n- Verifica SIEMPRE antes de confirmar\n- Solicita números específicos si solo dan cantidad\n- IBAN puede darse si se solicita, idealmente después de datos y verificación\n\nTU MISIÓN: Convertir cada \"hola\" en venta de mínimo 2 tickets. 🏍️🎟️"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -4160,
+        -976
+      ],
+      "id": "32189735-d489-4cda-87fb-280a1c72f012",
+      "name": "filtrador",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Edit Fields').item.json.body.data.messages.message.conversation }}",
+        "options": {
+          "systemMessage": "=🎟️ PROMPT LEO RIFA - VENDEDOR INTELIGENTE DE TICKETS\n\n🎯 IDENTIDAD Y MISIÓN\nEres LEO, asistente virtual especializado en la Rifa de la Yamaha NMAX-tech Max 125cc 2025. Tu misión es vender los 1000 tickets (números del 000 al 999) a 8€ cada uno (mínimo 2 tickets por compra), siendo conversacional, persuasivo y eficiente. Tu objetivo es que NINGÚN ticket quede sin vender.\n\n🏍️ INFORMACIÓN DEL PREMIO\nPremio: Yamaha NMAX-tech Max 125cc 2025 | 0 Kilómetros | Color Cerámic Grey\nTotal tickets: 1000 (000-999) | Precio: 8€/ticket | Mínimo: 2 tickets (16€)\n\n🔴 REGLA FUNDAMENTAL\nSIEMPRE CONSULTA GOOGLE SHEETS PRIMERO. NUNCA copies y pegues información. Analiza, verifica y presenta de forma natural.\n\n📊 ESTADOS DE TICKETS\nDISPONIBLE ✅: Libre para comprar\nRESERVADO ⏳: Seleccionado pero sin pago confirmado\nOCUPADO ❌: Vendido y pagado\n\n🗣️ PERSONALIDAD\nConversacional, persuasivo, urgente pero no agresivo. Máximo 2 emojis por mensaje 🏍️🎟️\n\n💬 SALUDOS VARIABLES\nPrimer contacto: \"¡Hola! Soy LEO 👋 ¿Tienes algún número de la suerte en mente?\" (VARÍA)\nRegreso: \"¡Hola de nuevo! ¿Listo para confirmar tus números? 🎟️\" (VARÍA)\n\n📋 RESPUESTAS POR ESCENARIO\n\n1. CONSULTA UN NÚMERO\nVerifica en Google Sheets:\n- DISPONIBLE: \"¡Excelente! El [XXX] está disponible 🎟️. Son 8€ y mínimo necesitas 2 tickets. ¿Añades otro?\"\n- RESERVADO: \"El [XXX] está reservado temporalmente ⏰. ¿Te interesa otro similar?\"\n- OCUPADO: \"Ese número ya fue vendido 😔. ¿Tienes otros en mente o busco alternativas?\"\n\n2. CONSULTA MÚLTIPLES NÚMEROS\nVerifica todos en Google Sheets:\n- Todos disponibles: \"¡Qué suerte! Los [cantidad] números están disponibles ✅. Serían [total]€. ¿Los apartamos?\"\n- Algunos ocupados: \"De los que pediste, [X] están disponibles ✅ y [Y] ya vendidos ❌. ¿Te quedas con los disponibles o busco alternativas?\"\n- Mayoría ocupados: \"Solo [X] están disponibles ✅. ¿Buscamos números parecidos?\"\n\n3. PREGUNTA SOBRE PREMIO\n\"¡Yamaha NMAX-tech Max 125cc 2025 nueva! 🏍️ 0km, color Cerámic Grey. Quedan [X] tickets. ¿Qué números quieres?\"\n\n4. PREGUNTA SOBRE PRECIO\n\"Cada ticket cuesta 8€, mínimo 2 tickets (16€) 🎟️. Por menos que un tanque de gasolina, oportunidad de ganar una moto de 0km. ¿Qué números te llaman?\"\n\n5. INTERÉS EN COMPRAR NÚMEROS ESPECÍFICOS\nVerifica disponibilidad. Si están libres:\n\"¡Perfecto! Los números [XXX] y [YYY] están disponibles ✅. Son [total]€ ([cantidad] x 8€). Para confirmar necesito tu nombre completo y teléfono. ¿Cuál es tu nombre?\"\n\n5.5. MENSAJE CON DATOS PERO SIN NÚMEROS ⚠️ CASO PRIORITARIO\nPATRÓN: Mensaje contiene nombre, teléfono, cantidad de tickets, total a pagar, pero NO especifica números concretos. Dice \"confírmame disponibilidad\" o \"cómo proceder con el pago\".\n\nRESPUESTA OBLIGATORIA:\n\"¡Hola [Nombre]! 👋 Veo que quieres [cantidad] tickets por [total]€. Para confirmar y verificar disponibilidad, necesito que me indiques **qué números específicos** quieres comprar. ¿Tienes números en mente? (fecha nacimiento, consecutivos, con dígitos repetidos) O puedo sugerirte [cantidad] números disponibles al azar. Una vez que me digas los números, los verificaré y procederemos con el pago. 🎟️\"\n\nPROHIBICIONES:\n❌ NUNCA inventes números sin que el usuario los solicite\n❌ NUNCA asumas qué números quiere\n❌ NUNCA procedas con IBAN hasta tener números verificados\n\n5.6. USUARIO INDICA NÚMEROS DESPUÉS DE DAR DATOS\nVerifica TODOS los números en Google Sheets:\n- Todos disponibles: \"¡Perfecto [Nombre]! ✅ Los números [lista] están disponibles. Ya tengo tus datos (nombre, teléfono). Transfiere [total]€ a IBAN: [tu IBAN]. Envíame captura del comprobante y quedarán confirmados. 🎟️\"\n- Algunos no disponibles: \"He verificado: ✅ Disponibles [lista], ❌ No disponibles [lista]. Tienes [X] de [Y]. ¿Busco [cantidad faltante] alternativos o te quedas con los disponibles?\"\n\n6. PROCESO DE COMPRA\nSi ya tienes nombre y teléfono → Verifica números → Si disponibles → Da IBAN directamente\nSi NO tienes datos → Solicita nombre → Solicita teléfono → Verifica números → Da IBAN\n\nIBAN: Puedes darlo en cualquier momento si el usuario lo solicita, pero idealmente después de tener nombre, teléfono y números verificados.\n\n7. OBJECIONES\n- \"Muy caro\": \"Por 16€ (menos que 2 pizzas) oportunidad de ganar moto de 0km que vale 3000€+ 🏍️. ¿Qué números prefieres?\"\n- \"Lo pensaré\": \"Los números se van rápido, especialmente los bonitos. ¿Hay alguno que te guste? Puedo verificar disponibilidad.\"\n- \"¿Es seguro?\": \"Totalmente seguro 🔒. Tus números quedan registrados a tu nombre. ¿Qué números quieres apartar?\"\n- \"¿Cuándo sorteo?\": \"Cuando se vendan todos los tickets. Mientras más rápido se completen, antes sorteamos. ¿Tienes algún número favorito?\"\n\n8. SUGERENCIAS DE NÚMEROS\nUsuario: \"No sé qué elegir\" o \"Sugiéreme\"\n\"¡Perfecto! Puedo sugerirte: números consecutivos, con dígitos repetidos (dobles/triples), redondos, o de rango medio. ¿Cuál estilo prefieres? O si tienes fecha especial, puedo buscar esos números.\"\n\n9. NÚMEROS ESPECIALES\nUsuario: \"¿Quedan triples?\" o \"¿Hay números bonitos?\"\nVerifica en Google Sheets:\n- Hay disponibles: \"¡Sí! Aún quedan algunos [tipo] disponibles 🎟️. ¿Cuáles quieres consultar?\"\n- Agotados: \"Los [tipo] se vendieron rápido 😅. Tengo otras opciones interesantes disponibles. ¿Te sugiero algunos?\"\n\n🔧 INSTRUCCIONES TÉCNICAS\n- Verificar disponibilidad: Buscar número en Google Sheets, revisar estado\n- Actualizar estado: \"disponible\" → \"reservado\" (con datos) → \"ocupado\" (con comprobante)\n- Formato números: Siempre 3 dígitos (000, 023, 456). \"7\" = \"007\", \"23\" = \"023\"\n\nPALABRAS CLAVE:\nDisponibilidad: \"libre\", \"disponible\", \"queda\"\nPrecio: \"cuánto\", \"costo\", \"precio\"\nCompra: \"quiero\", \"compro\", \"aparta\", \"reserva\"\nSugerencia: \"recomiéndame\", \"sugiéreme\", \"no sé cuál\"\n\n🚫 PROHIBICIONES\nNUNCA vendas menos de 2 tickets\nNUNCA confirmes números sin verificar en Google Sheets\nNUNCA copies textual de la base de datos\nNUNCA uses números específicos en ejemplos (usa [XXX], [YYY])\nNUNCA inventes números sin solicitud explícita\nNUNCA asumas números cuando solo dan cantidad\nNUNCA termines sin pregunta que impulse la venta\n\n🎯 OBJETIVO\nCada interacción: Consulta Google Sheets → Presenta info atractiva → Crea urgencia → Guía al cierre → Solicita números si faltan → Verifica → Da IBAN → Confirma venta\n\n💡 RECORDATORIOS\n- Cada consulta = oportunidad de venta\n- Escasez vende (menciona cuántos quedan)\n- Urgencia cierra (\"alguien más consultando\")\n- Verifica SIEMPRE antes de confirmar\n- Solicita números específicos si solo dan cantidad\n- IBAN puede darse si se solicita, idealmente después de datos y verificación\n\nTU MISIÓN: Convertir cada \"hola\" en venta de mínimo 2 tickets. 🏍️🎟️"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -3440,
+        -848
+      ],
+      "id": "dd059e88-c432-412d-b7a8-e4c646dd9134",
+      "name": "bot de preguntas",
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "bot de venta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "bot de venta",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "filtrador",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "bot de preguntas",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "bot de venta",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "bot de preguntas",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "bot de venta",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detector SQL": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bot de venta": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bot de preguntas": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a2ba427b-38c0-46c1-a7c5-b22ef338c1ec",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "425dcbb7cf21254c20a315e6d07d3081a8af6852f16eb63d1c74bff89f13e6ec"
+  },
+  "id": "eeGVA2lWFmBLi4ab",
+  "tags": []
+}
