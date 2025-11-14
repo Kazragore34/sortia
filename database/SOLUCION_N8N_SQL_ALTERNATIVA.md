@@ -288,7 +288,7 @@ Luego, en n8n, agregar un nodo "Switch" después del agente que detecte "SQL_QUE
 ---
 
 ## 📋 Plan de Acción Inmediato
-
+    
 1. **Ejecutar funciones SQL en Supabase** (5 min)
 2. **Modificar el prompt del agente** para usar formato SQL_QUERY (5 min)
 3. **Agregar nodo Switch + HTTP Request** para procesar consultas (15 min)

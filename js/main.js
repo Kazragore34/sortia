@@ -14,16 +14,18 @@ const CONFIG = {
     whatsappNumber: '722539447', // Número de WhatsApp
     // Configuración de Google Sheets
     googleSheets: {
-        // URL completa del Google Sheet
+        // ID del Google Sheet
         sheetId: '11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s',
         // Nombre de la hoja (pestaña) a leer. Por defecto 'Sheet1'
         sheetName: 'Sheet1',
         // Método de lectura: 'csv' (más simple, requiere sheet público), 'api' (requiere API key), 'appsscript' (requiere script desplegado)
-        method: 'csv',
+        method: 'api', // Cambiar a 'api' para usar la API de Google Sheets
         // Opciones adicionales según el método
         options: {
-            // Para método 'api': apiKey: 'TU_API_KEY_AQUI'
-            // Para método 'appsscript': scriptUrl: 'URL_DEL_SCRIPT_AQUI'
+            // API Key de Google Cloud Console (OBTÉN ESTA KEY - ver instrucciones abajo)
+            apiKey: 'TU_API_KEY_AQUI',
+            // Rango específico a leer (columna D desde fila 2 hasta 1002)
+            range: 'D2:D1002'
         }
     }
 };
@@ -160,10 +162,15 @@ class GoogleSheetsReader {
     /**
      * Lee los datos usando la API de Google Sheets (requiere API key pública)
      * Opción 3: Usando la API pública de Google Sheets
+     * @param {string} apiKey - API Key de Google Cloud Console
+     * @param {string} range - Rango específico a leer (ej: 'D2:D1002')
      */
-    async fetchFromAPI(apiKey) {
+    async fetchFromAPI(apiKey, range = null) {
         try {
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/${this.sheetId}/values/${encodeURIComponent(this.sheetName)}?key=${apiKey}`;
+            // Si se especifica un rango, leer solo ese rango
+            // Si no, leer toda la hoja
+            const rangeParam = range ? `!${range}` : '';
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${this.sheetId}/values/${encodeURIComponent(this.sheetName)}${rangeParam}?key=${apiKey}`;
             
             const response = await fetch(url, {
                 method: 'GET',
@@ -171,7 +178,8 @@ class GoogleSheetsReader {
             });
             
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error?.message || 'Unknown error'}`);
             }
             
             const data = await response.json();
@@ -184,6 +192,11 @@ class GoogleSheetsReader {
 
     /**
      * Método principal: Intenta leer usando el método más adecuado
+     * @param {string} method - Método a usar: 'csv', 'api', o 'appsscript'
+     * @param {object} options - Opciones según el método
+     * @param {string} options.apiKey - API Key (para método 'api')
+     * @param {string} options.scriptUrl - URL del script (para método 'appsscript')
+     * @param {string} options.range - Rango específico a leer (ej: 'D2:D1002')
      */
     async fetchData(method = 'csv', options = {}) {
         // Verificar caché
@@ -205,7 +218,7 @@ class GoogleSheetsReader {
                     if (!options.apiKey) {
                         throw new Error('Se requiere apiKey para el método api');
                     }
-                    data = await this.fetchFromAPI(options.apiKey);
+                    data = await this.fetchFromAPI(options.apiKey, options.range || null);
                     break;
                 case 'csv':
                 default:
@@ -278,12 +291,23 @@ class GoogleSheetsReader {
 
     /**
      * Parsea respuesta de la API de Google Sheets
+     * Si se lee un rango específico (como D2:D1002), crea una estructura compatible
      */
     parseAPIResponse(data) {
         if (!data.values || data.values.length === 0) {
-            return { rows: [] };
+            return { headers: ['Estado'], rows: [] };
         }
 
+        // Si solo hay una columna (rango D2:D1002), crear estructura con header 'Estado'
+        if (data.values[0].length === 1) {
+            const rows = [];
+            for (let i = 0; i < data.values.length; i++) {
+                rows.push({ 'Estado': data.values[i][0] || '' });
+            }
+            return { headers: ['Estado'], rows };
+        }
+
+        // Si hay múltiples columnas, usar la primera fila como headers
         const headers = data.values[0];
         const rows = [];
 
@@ -372,8 +396,12 @@ class TicketsCounter {
         this.showLoadingState();
 
         try {
-            // Intentar leer usando CSV (método más simple)
-            const data = await this.googleSheets.fetchData('csv');
+            // Obtener método y opciones de la configuración
+            const method = CONFIG.googleSheets?.method || 'csv';
+            const options = CONFIG.googleSheets?.options || {};
+            
+            // Leer datos según el método configurado
+            const data = await this.googleSheets.fetchData(method, options);
             
             // Intentar detectar la columna de estado automáticamente
             // Buscar columnas comunes: 'Estado', 'Status', 'estado', 'status', etc.
@@ -385,14 +413,25 @@ class TicketsCounter {
             }
 
             let totalSold = 0;
+            let totalAvailable = 0;
 
             if (statusColumn) {
                 // Contar tickets vendidos y reservados
                 const sold = this.googleSheets.countSoldTickets(data, statusColumn, 'vendido');
                 const reserved = this.googleSheets.countSoldTickets(data, statusColumn, 'reservado');
                 totalSold = sold + reserved;
+                totalAvailable = this.googleSheets.countAvailableTickets(data, statusColumn, 'disponible');
                 
-                console.log(`📊 Tickets vendidos: ${sold}, Reservados: ${reserved}, Total: ${totalSold}`);
+                console.log(`📊 Tickets vendidos: ${sold}, Reservados: ${reserved}, Disponibles: ${totalAvailable}, Total vendidos/reservados: ${totalSold}`);
+            } else if (data.headers && data.headers.length > 0 && data.headers[0] === 'Estado') {
+                // Si la columna se llama 'Estado' (caso del rango D2:D1002)
+                statusColumn = 'Estado';
+                const sold = this.googleSheets.countSoldTickets(data, statusColumn, 'vendido');
+                const reserved = this.googleSheets.countSoldTickets(data, statusColumn, 'reservado');
+                totalSold = sold + reserved;
+                totalAvailable = this.googleSheets.countAvailableTickets(data, statusColumn, 'disponible');
+                
+                console.log(`📊 Columna D detectada - Vendidos: ${sold}, Reservados: ${reserved}, Disponibles: ${totalAvailable}, Total vendidos/reservados: ${totalSold}`);
             } else {
                 // Si no hay columna de estado, contar todas las filas con datos
                 // Esto asume que cada fila (excepto el header) representa un ticket vendido
