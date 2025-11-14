@@ -385,16 +385,30 @@ class TicketsCounter {
         this.currentDisplay = 0;
         this.soldTickets = 0;
         
+        // Verificar configuración
+        console.log('🔧 Inicializando TicketsCounter...', {
+            hasGoogleSheets: !!this.googleSheets,
+            config: CONFIG.googleSheets
+        });
+        
         // Si hay configuración de Google Sheets, cargar datos reales
         if (this.googleSheets) {
-            await this.loadFromGoogleSheets();
-            // Actualizar cada 30 segundos
-            this.updateInterval = setInterval(() => {
-                this.loadFromGoogleSheets();
-            }, 30000);
+            console.log('✅ Configuración de Google Sheets detectada. Cargando datos...');
+            try {
+                await this.loadFromGoogleSheets();
+                // Actualizar cada 30 segundos
+                this.updateInterval = setInterval(() => {
+                    this.loadFromGoogleSheets();
+                }, 30000);
+            } catch (error) {
+                console.error('❌ Error al inicializar desde Google Sheets:', error);
+                // NO usar valores aleatorios si hay error, mantener en 0
+                console.warn('⚠️ Manteniendo contador en 0 hasta que se resuelva el error.');
+            }
         } else {
             // Fallback: usar valor simulado (solo para desarrollo)
             console.warn('⚠️ No hay configuración de Google Sheets. Usando valores simulados.');
+            console.warn('⚠️ Esto NO debería pasar en producción. Verifica CONFIG.googleSheets');
             const targetSold = Math.floor(Math.random() * 200);
             this.animateToValue(targetSold);
         }
