@@ -22,8 +22,8 @@ const CONFIG = {
         method: 'api', // Cambiar a 'api' para usar la API de Google Sheets
         // Opciones adicionales según el método
         options: {
-            // API Key de Google Cloud Console (OBTÉN ESTA KEY - ver instrucciones abajo)
-            apiKey: 'TU_API_KEY_AQUI',
+            // API Key de Google Cloud Console
+            apiKey: 'AIzaSyBTg5ozE85sC1Qvw2ZbxnTW5Jxnn0cL4iE',
             // Rango específico a leer (columna D desde fila 2 hasta 1002)
             range: 'D2:D1002'
         }
@@ -324,25 +324,36 @@ class GoogleSheetsReader {
 
     /**
      * Cuenta tickets vendidos (asume que hay una columna de estado)
+     * Reconoce: vendido, reservado, ocupado, y variantes
      */
     countSoldTickets(data, statusColumn = 'Estado', soldValue = 'vendido') {
         if (!data.rows) return 0;
         
         return data.rows.filter(row => {
             const status = (row[statusColumn] || '').toLowerCase().trim();
-            return status === soldValue.toLowerCase() || status === 'reservado';
+            // Reconocer diferentes variantes de "no disponible"
+            const notAvailable = [
+                'vendido', 'reservado', 'ocupado', 'ocupada',
+                'vendida', 'reservada', 'comprado', 'comprada'
+            ];
+            return notAvailable.includes(status);
         }).length;
     }
 
     /**
      * Cuenta tickets disponibles
+     * Reconoce: disponible, disponble (typo común), y variantes
      */
     countAvailableTickets(data, statusColumn = 'Estado', availableValue = 'disponible') {
         if (!data.rows) return 0;
         
         return data.rows.filter(row => {
             const status = (row[statusColumn] || '').toLowerCase().trim();
-            return status === availableValue.toLowerCase();
+            // Reconocer diferentes variantes de "disponible"
+            const available = [
+                'disponible', 'disponble', 'dispon', 'libre', 'available'
+            ];
+            return available.includes(status);
         }).length;
     }
 }
@@ -423,15 +434,24 @@ class TicketsCounter {
                 totalAvailable = this.googleSheets.countAvailableTickets(data, statusColumn, 'disponible');
                 
                 console.log(`📊 Tickets vendidos: ${sold}, Reservados: ${reserved}, Disponibles: ${totalAvailable}, Total vendidos/reservados: ${totalSold}`);
-            } else if (data.headers && data.headers.length > 0 && data.headers[0] === 'Estado') {
-                // Si la columna se llama 'Estado' (caso del rango D2:D1002)
-                statusColumn = 'Estado';
+            } else if (data.headers && data.headers.length > 0) {
+                // Si hay headers, usar el primero (caso del rango D2:D1002)
+                statusColumn = data.headers[0];
+                
+                // Si el primer header es "estado" o similar, puede ser un header real
+                // Si no, puede ser que la primera fila sea un dato
+                const firstHeader = statusColumn.toLowerCase().trim();
+                const isHeader = ['estado', 'status', 'state'].includes(firstHeader);
+                
+                // Si es un header, ya está bien. Si no, puede ser que la primera fila sea un dato
+                // En ese caso, el parseAPIResponse ya la incluyó en rows, así que está bien
+                
                 const sold = this.googleSheets.countSoldTickets(data, statusColumn, 'vendido');
                 const reserved = this.googleSheets.countSoldTickets(data, statusColumn, 'reservado');
                 totalSold = sold + reserved;
                 totalAvailable = this.googleSheets.countAvailableTickets(data, statusColumn, 'disponible');
                 
-                console.log(`📊 Columna D detectada - Vendidos: ${sold}, Reservados: ${reserved}, Disponibles: ${totalAvailable}, Total vendidos/reservados: ${totalSold}`);
+                console.log(`📊 Columna D detectada (${statusColumn}) - Vendidos: ${sold}, Reservados: ${reserved}, Disponibles: ${totalAvailable}, Total vendidos/reservados: ${totalSold}`);
             } else {
                 // Si no hay columna de estado, contar todas las filas con datos
                 // Esto asume que cada fila (excepto el header) representa un ticket vendido
