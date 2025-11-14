@@ -356,6 +356,21 @@ class GoogleSheetsReader {
             return available.includes(status);
         }).length;
     }
+
+    /**
+     * Cuenta tickets por estados específicos
+     * @param {object} data - Datos del sheet
+     * @param {string} statusColumn - Nombre de la columna de estado
+     * @param {array} statusList - Lista de estados a contar
+     */
+    countByStatus(data, statusColumn = 'Estado', statusList = []) {
+        if (!data.rows) return 0;
+        
+        return data.rows.filter(row => {
+            const status = (row[statusColumn] || '').toLowerCase().trim();
+            return statusList.map(s => s.toLowerCase()).includes(status);
+        }).length;
+    }
 }
 
 // ============================================
@@ -454,33 +469,30 @@ class TicketsCounter {
             let totalAvailable = 0;
 
             if (statusColumn) {
-                // Contar tickets vendidos y reservados
-                const sold = this.googleSheets.countSoldTickets(data, statusColumn, 'vendido');
-                const reserved = this.googleSheets.countSoldTickets(data, statusColumn, 'reservado');
-                totalSold = sold + reserved;
-                totalAvailable = this.googleSheets.countAvailableTickets(data, statusColumn, 'disponible');
+                // Contar tickets NO disponibles (vendidos, reservados, ocupados, etc.)
+                totalSold = this.googleSheets.countSoldTickets(data, statusColumn);
+                totalAvailable = this.googleSheets.countAvailableTickets(data, statusColumn);
                 
-                console.log(`📊 Tickets vendidos: ${sold}, Reservados: ${reserved}, Disponibles: ${totalAvailable}, Total vendidos/reservados: ${totalSold}`);
+                // Contar por tipo específico para el log
+                const sold = this.googleSheets.countByStatus(data, statusColumn, ['vendido', 'vendida', 'ocupado', 'ocupada', 'comprado', 'comprada']);
+                const reserved = this.googleSheets.countByStatus(data, statusColumn, ['reservado', 'reservada']);
+                
+                console.log(`📊 Tickets vendidos/ocupados: ${sold}, Reservados: ${reserved}, Disponibles: ${totalAvailable}, Total NO disponibles: ${totalSold}`);
             } else if (data.headers && data.headers.length > 0) {
                 // Si hay headers, usar el primero (caso del rango D2:D1002)
                 statusColumn = data.headers[0];
                 
                 console.log(`📋 Usando columna: "${statusColumn}"`);
                 
-                // Si el primer header es "estado" o similar, puede ser un header real
-                // Si no, puede ser que la primera fila sea un dato
-                const firstHeader = statusColumn.toLowerCase().trim();
-                const isHeader = ['estado', 'status', 'state'].includes(firstHeader);
+                // Contar tickets NO disponibles (vendidos, reservados, ocupados, etc.)
+                totalSold = this.googleSheets.countSoldTickets(data, statusColumn);
+                totalAvailable = this.googleSheets.countAvailableTickets(data, statusColumn);
                 
-                // Si es un header, ya está bien. Si no, puede ser que la primera fila sea un dato
-                // En ese caso, el parseAPIResponse ya la incluyó en rows, así que está bien
+                // Contar por tipo específico para el log
+                const sold = this.googleSheets.countByStatus(data, statusColumn, ['vendido', 'vendida', 'ocupado', 'ocupada', 'comprado', 'comprada']);
+                const reserved = this.googleSheets.countByStatus(data, statusColumn, ['reservado', 'reservada']);
                 
-                const sold = this.googleSheets.countSoldTickets(data, statusColumn, 'vendido');
-                const reserved = this.googleSheets.countSoldTickets(data, statusColumn, 'reservado');
-                totalSold = sold + reserved;
-                totalAvailable = this.googleSheets.countAvailableTickets(data, statusColumn, 'disponible');
-                
-                console.log(`📊 Columna D detectada (${statusColumn}) - Vendidos: ${sold}, Reservados: ${reserved}, Disponibles: ${totalAvailable}, Total vendidos/reservados: ${totalSold}`);
+                console.log(`📊 Columna D detectada (${statusColumn}) - Vendidos/ocupados: ${sold}, Reservados: ${reserved}, Disponibles: ${totalAvailable}, Total NO disponibles: ${totalSold}`);
                 
                 // Mostrar algunos valores de ejemplo para debugging
                 if (data.rows && data.rows.length > 0) {
