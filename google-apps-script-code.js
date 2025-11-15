@@ -29,9 +29,9 @@ function updateTicketsStatus(ticketNumbers, newStatus = 'reservado', customerNam
       sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
     }
     
-    // Columnas: A=1 (numero/telefono), B=2 (nombre - contiene el número de ticket, se actualizará con nombre completo), C=3 (telefono), D=4 (estado), E=5 (fecha)
-    const ticketNumberColumn = 2; // Columna B contiene los números de tickets (para buscar)
-    const phoneColumn = 1; // Columna A contiene el teléfono
+    // Columnas: A=1 (numero - contiene el número de ticket), B=2 (nombre - se actualizará con nombre completo), C=3 (telefono), D=4 (estado), E=5 (fecha)
+    const ticketNumberColumn = 1; // Columna A contiene los números de tickets (para buscar)
+    const phoneColumn = 3; // Columna C contiene el teléfono
     const nameColumn = 2; // Columna B se actualizará con nombre completo
     const statusColumn = 4; // Columna D contiene el estado
     const dateColumn = 5; // Columna E contiene la fecha

@@ -428,13 +428,13 @@ class GoogleSheetsReader {
 
         // Priorizar values (formato API directo) si está disponible
         if (data.values && data.values.length > 0) {
-            // Estructura: A=numero (vacía), B=nombre (contiene el número de ticket), C=telefono, D=estado
+            // Estructura: A=numero (contiene el número de ticket), B=nombre, C=telefono, D=estado
             // Si el rango es A2:D1002, no hay header, así que usamos directamente los valores
             for (let i = 0; i < data.values.length; i++) {
                 const row = data.values[i];
                 if (row && row.length >= 4) {
-                    // Columna B (índice 1) contiene el número de ticket, columna D (índice 3) contiene el estado
-                    const ticketNumberRaw = row[1]; // Columna B (nombre)
+                    // Columna A (índice 0) contiene el número de ticket, columna D (índice 3) contiene el estado
+                    const ticketNumberRaw = row[0]; // Columna A (numero)
                     const ticketNumber = ticketNumberRaw !== null && ticketNumberRaw !== undefined && ticketNumberRaw !== '' 
                         ? Number(ticketNumberRaw) 
                         : null;
@@ -455,8 +455,8 @@ class GoogleSheetsReader {
         } else if (data.rows && data.headers) {
             // Si data tiene rows (formato parseado), buscar columnas por nombre
             const numberColumn = data.headers.find(h => 
-                ['Número', 'Numero', 'Ticket', 'Número Ticket', 'id_tickets', 'nombre', 'Nombre'].includes(h)
-            ) || data.headers[1]; // Por defecto columna B (índice 1) si no se encuentra
+                ['Número', 'Numero', 'Ticket', 'Número Ticket', 'id_tickets', 'numero'].includes(h)
+            ) || data.headers[0]; // Por defecto columna A (índice 0) si no se encuentra
             const statusColumn = data.headers.find(h => 
                 ['Estado', 'Status', 'estado', 'status'].includes(h)
             ) || data.headers[3]; // Por defecto columna D (índice 3)
