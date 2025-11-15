@@ -30,7 +30,7 @@ const CONFIG = {
             ticketsRange: 'A2:D1002',
             // URL del Google Apps Script para actualizar tickets (opcional, pero recomendado)
             // Obtén esta URL siguiendo las instrucciones en GOOGLE_APPS_SCRIPT_UPDATE.md
-            updateScriptUrl: 'https://script.google.com/macros/s/AKfycbyZFnHjKHCl03l_VBQm-cyPSF2cx96m2fQYGjKLYM9yDCiQKlCGdG3t6dl5Qgg8TtGc9g/exec'
+            updateScriptUrl: 'https://script.google.com/macros/s/AKfycby4vLlAaVMc2GCk7XqBRR8c8jBvRUonutuWBVgdYqnSWPKlzVO2LG66MocfnDjeiZac4g/exec'
         }
     }
 };
