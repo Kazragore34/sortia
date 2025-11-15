@@ -334,16 +334,19 @@ h1, h2, h3, h4, h5, h6 {
 /* Grid de números de tickets */
 #ticket-numbers-grid {
     min-height: 200px;
+    gap: 0.75rem;
 }
 
 .ticket-number-btn {
-    min-width: 50px;
-    height: 40px;
+    min-width: 60px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-variant-numeric: tabular-nums;
     transition: all 0.2s ease;
+    font-size: 0.875rem;
+    font-weight: 500;
 }
 
 .ticket-number-btn:hover:not(:disabled) {
@@ -395,9 +398,9 @@ h1, h2, h3, h4, h5, h6 {
     }
     
     .ticket-number-btn {
-        min-width: 40px;
-        height: 36px;
-        font-size: 0.75rem;
+        min-width: 44px;
+        height: 44px;
+        font-size: 0.8125rem;
         padding: 0.5rem;
     }
     

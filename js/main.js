@@ -430,9 +430,14 @@ class GoogleSheetsReader {
             for (let i = 0; i < data.values.length; i++) {
                 const row = data.values[i];
                 if (row && row.length >= 4) {
-                    const ticketNumber = parseInt(row[0]) || null;
+                    // Usar Number() en lugar de parseInt() || null para manejar correctamente el 0
+                    const ticketNumberRaw = row[0];
+                    const ticketNumber = ticketNumberRaw !== null && ticketNumberRaw !== undefined && ticketNumberRaw !== '' 
+                        ? Number(ticketNumberRaw) 
+                        : null;
                     const status = (row[3] || '').trim();
-                    if (ticketNumber !== null && ticketNumber >= 0 && ticketNumber <= 999) {
+                    // Verificar que sea un número válido (incluyendo 0)
+                    if (ticketNumber !== null && !isNaN(ticketNumber) && ticketNumber >= 0 && ticketNumber <= 999) {
                         ticketsMap.set(ticketNumber, status);
                     }
                 } else if (row && row.length === 1) {
@@ -454,9 +459,14 @@ class GoogleSheetsReader {
             ) || data.headers[3];
 
             data.rows.forEach(row => {
-                const ticketNumber = parseInt(row[numberColumn]) || null;
+                // Usar Number() en lugar de parseInt() || null para manejar correctamente el 0
+                const ticketNumberRaw = row[numberColumn];
+                const ticketNumber = ticketNumberRaw !== null && ticketNumberRaw !== undefined && ticketNumberRaw !== '' 
+                    ? Number(ticketNumberRaw) 
+                    : null;
                 const status = (row[statusColumn] || '').trim();
-                if (ticketNumber !== null && ticketNumber >= 0 && ticketNumber <= 999) {
+                // Verificar que sea un número válido (incluyendo 0)
+                if (ticketNumber !== null && !isNaN(ticketNumber) && ticketNumber >= 0 && ticketNumber <= 999) {
                     ticketsMap.set(ticketNumber, status);
                 }
             });
@@ -886,6 +896,8 @@ let requiredTicketAmount = 2;
 let occupiedTicketsSet = new Set();
 let currentPage = 1;
 const TICKETS_PER_PAGE = 100;
+let paginationInitialized = false;
+let paginationHandlers = { prev: null, next: null };
 
 async function openPurchaseModal(amount) {
     const modal = document.getElementById('purchase-modal');
@@ -906,6 +918,7 @@ async function openPurchaseModal(amount) {
     // Limpiar selección previa
     selectedTickets.clear();
     currentPage = 1;
+    paginationInitialized = false;
     
     // Limpiar campos del formulario
     document.getElementById('customer-name').value = '';
@@ -1034,22 +1047,42 @@ function initPagination() {
     const prevBtn = document.getElementById('prev-page');
     const nextBtn = document.getElementById('next-page');
     
-    prevBtn.addEventListener('click', () => {
+    // Remover listeners anteriores si existen
+    if (paginationInitialized) {
+        if (paginationHandlers.prev && prevBtn) {
+            prevBtn.removeEventListener('click', paginationHandlers.prev);
+        }
+        if (paginationHandlers.next && nextBtn) {
+            nextBtn.removeEventListener('click', paginationHandlers.next);
+        }
+    }
+    
+    // Crear nuevos handlers
+    paginationHandlers.prev = () => {
         if (currentPage > 1) {
             currentPage--;
             renderTicketNumbers();
             updatePaginationButtons();
         }
-    });
+    };
     
-    nextBtn.addEventListener('click', () => {
+    paginationHandlers.next = () => {
         if (currentPage < totalPages) {
             currentPage++;
             renderTicketNumbers();
             updatePaginationButtons();
         }
-    });
+    };
     
+    // Agregar listeners
+    if (prevBtn) {
+        prevBtn.addEventListener('click', paginationHandlers.prev);
+    }
+    if (nextBtn) {
+        nextBtn.addEventListener('click', paginationHandlers.next);
+    }
+    
+    paginationInitialized = true;
     updatePaginationButtons();
 }
 
