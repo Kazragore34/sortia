@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Tickets - Sortia</title>
+</head>
+<body>
+    <script>
+        // Configuración (misma que en main.js)
+        const CONFIG = {
+            totalTickets: 1000,
+            googleSheets: {
+                sheetId: '11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s',
+                sheetName: 'Hoja 1',
+                method: 'api',
+                options: {
+                    apiKey: 'AIzaSyBTg5ozE85sC1Qvw2ZbxnTW5Jxnn0cL4iE',
+                    range: 'D2:D1001',
+                    ticketsRange: 'A2:D1001'
+                }
+            }
+        };
+
+        // Clase simplificada para leer Google Sheets
+        class GoogleSheetsReader {
+            constructor(sheetId, sheetName) {
+                this.sheetId = sheetId;
+                this.sheetName = sheetName;
+            }
+
+            async fetchData(method, options) {
+                const { apiKey, ticketsRange } = options;
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${this.sheetId}/values/${this.sheetName}!${ticketsRange}?key=${apiKey}`;
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Error al leer Google Sheets');
+                
+                const data = await response.json();
+                return this.parseResponse(data);
+            }
+
+            parseResponse(data) {
+                if (!data.values || data.values.length === 0) return { rows: [] };
+                
+                // Solo leer el estado, NO nombres ni teléfonos
+                const rows = data.values.map(row => ({
+                    estado: (row[3] || '').trim()
+                }));
+
+                return { rows };
+            }
+        }
+
+        // Función para obtener JSON (para n8n)
+        async function getJSONData() {
+            try {
+                const reader = new GoogleSheetsReader(
+                    CONFIG.googleSheets.sheetId,
+                    CONFIG.googleSheets.sheetName
+                );
+
+                const data = await reader.fetchData(
+                    CONFIG.googleSheets.method,
+                    CONFIG.googleSheets.options
+                );
+
+                // Contar tickets disponibles (solo contar, sin guardar datos personales)
+                let disponibles = 0;
+                data.rows.forEach(row => {
+                    const estado = (row.estado || 'disponible').toLowerCase().trim();
+                    if (estado === 'disponible') {
+                        disponibles++;
+                    }
+                });
+
+                const now = new Date();
+                const jsonData = {
+                    fecha: now.toISOString(),
+                    fecha_formateada: now.toLocaleString('es-ES', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        timeZone: 'Europe/Madrid'
+                    }),
+                    tickets_disponibles: disponibles,
+                    tickets_totales: CONFIG.totalTickets,
+                    tickets_ocupados: CONFIG.totalTickets - disponibles,
+                    timestamp: Math.floor(now.getTime() / 1000)
+                };
+
+                // Devolver JSON
+                document.body.textContent = JSON.stringify(jsonData, null, 2);
+                document.body.style.fontFamily = 'monospace';
+                document.body.style.padding = '20px';
+                document.body.style.whiteSpace = 'pre';
+            } catch (error) {
+                document.body.textContent = JSON.stringify({ 
+                    error: error.message,
+                    fecha: new Date().toISOString()
+                }, null, 2);
+                document.body.style.fontFamily = 'monospace';
+                document.body.style.padding = '20px';
+                document.body.style.whiteSpace = 'pre';
+            }
+        }
+
+        // Ejecutar al cargar
+        getJSONData();
+    </script>
+</body>
+</html>
+
