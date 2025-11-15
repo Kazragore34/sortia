@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tickets Disponibles - Sortia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .ticket-card {
+            transition: all 0.3s ease;
+        }
+        .ticket-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .status-disponible {
+            background-color: #10b981;
+            color: white;
+        }
+        .status-ocupado {
+            background-color: #ef4444;
+            color: white;
+        }
+        .status-reservado {
+            background-color: #f59e0b;
+            color: white;
+        }
+        .status-vendido {
+            background-color: #6b7280;
+            color: white;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">🎫 Tickets Disponibles</h1>
+            <p class="text-gray-600">Consulta el estado de todos los tickets del sorteo</p>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="text-sm text-gray-600 mb-1">Total Tickets</div>
+                <div class="text-3xl font-bold text-gray-800" id="total-tickets">1000</div>
+            </div>
+            <div class="bg-green-50 rounded-lg shadow-lg p-6 border-2 border-green-500">
+                <div class="text-sm text-green-700 mb-1">Disponibles</div>
+                <div class="text-3xl font-bold text-green-600" id="disponibles">-</div>
+            </div>
+            <div class="bg-red-50 rounded-lg shadow-lg p-6 border-2 border-red-500">
+                <div class="text-sm text-red-700 mb-1">Ocupados</div>
+                <div class="text-3xl font-bold text-red-600" id="ocupados">-</div>
+            </div>
+            <div class="bg-yellow-50 rounded-lg shadow-lg p-6 border-2 border-yellow-500">
+                <div class="text-sm text-yellow-700 mb-1">Reservados</div>
+                <div class="text-3xl font-bold text-yellow-600" id="reservados">-</div>
+            </div>
+        </div>
+
+        <!-- Filtros y búsqueda -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="filterTickets('all')" class="filter-btn px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 active" data-filter="all">
+                        Todos
+                    </button>
+                    <button onclick="filterTickets('disponible')" class="filter-btn px-4 py-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200" data-filter="disponible">
+                        Disponibles
+                    </button>
+                    <button onclick="filterTickets('ocupado')" class="filter-btn px-4 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200" data-filter="ocupado">
+                        Ocupados
+                    </button>
+                    <button onclick="filterTickets('reservado')" class="filter-btn px-4 py-2 rounded-lg bg-yellow-100 text-yellow-700 hover:bg-yellow-200" data-filter="reservado">
+                        Reservados
+                    </button>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        placeholder="Buscar por número..." 
+                        class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        onkeyup="searchTickets()"
+                    >
+                    <button onclick="loadTickets()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                        🔄 Actualizar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado de carga -->
+        <div id="loading-state" class="bg-white rounded-lg shadow-lg p-12 text-center">
+            <div class="loading mx-auto mb-4"></div>
+            <p class="text-gray-600">Cargando tickets desde Google Sheets...</p>
+        </div>
+
+        <!-- Grid de tickets -->
+        <div id="tickets-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-3 mb-6" style="display: none;">
+            <!-- Los tickets se cargarán aquí dinámicamente -->
+        </div>
+
+        <!-- Información -->
+        <div class="bg-white rounded-lg shadow-lg p-6 text-center text-gray-600">
+            <p>Última actualización: <span id="last-update">-</span></p>
+            <p class="text-sm mt-2">Los datos se actualizan automáticamente cada 30 segundos</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuración (misma que en main.js)
+        const CONFIG = {
+            totalTickets: 1000,
+            googleSheets: {
+                sheetId: '11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s',
+                sheetName: 'Hoja 1',
+                method: 'api',
+                options: {
+                    apiKey: 'AIzaSyBTg5ozE85sC1Qvw2ZbxnTW5Jxnn0cL4iE',
+                    range: 'D2:D1001',
+                    ticketsRange: 'A2:D1001'
+                }
+            }
+        };
+
+        let allTickets = [];
+        let currentFilter = 'all';
+        let searchTerm = '';
+
+        // Clase simplificada para leer Google Sheets
+        class GoogleSheetsReader {
+            constructor(sheetId, sheetName) {
+                this.sheetId = sheetId;
+                this.sheetName = sheetName;
+            }
+
+            async fetchData(method, options) {
+                const { apiKey, ticketsRange } = options;
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${this.sheetId}/values/${this.sheetName}!${ticketsRange}?key=${apiKey}`;
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Error al leer Google Sheets');
+                
+                const data = await response.json();
+                return this.parseResponse(data);
+            }
+
+            parseResponse(data) {
+                if (!data.values || data.values.length === 0) return { rows: [] };
+                
+                const rows = data.values.map(row => ({
+                    numero: row[0] !== undefined ? Number(row[0]) : null,
+                    nombre: row[1] || '',
+                    telefono: row[2] || '',
+                    estado: (row[3] || '').trim()
+                }));
+
+                return { rows };
+            }
+        }
+
+        // Cargar tickets
+        async function loadTickets() {
+            const loadingState = document.getElementById('loading-state');
+            const ticketsGrid = document.getElementById('tickets-grid');
+            
+            loadingState.style.display = 'block';
+            ticketsGrid.style.display = 'none';
+
+            try {
+                const reader = new GoogleSheetsReader(
+                    CONFIG.googleSheets.sheetId,
+                    CONFIG.googleSheets.sheetName
+                );
+
+                const data = await reader.fetchData(
+                    CONFIG.googleSheets.method,
+                    CONFIG.googleSheets.options
+                );
+
+                // Procesar tickets
+                allTickets = [];
+                const stats = {
+                    total: 0,
+                    disponibles: 0,
+                    ocupados: 0,
+                    reservados: 0
+                };
+
+                data.rows.forEach((row, index) => {
+                    const ticketNumber = row.numero !== null && !isNaN(row.numero) 
+                        ? row.numero 
+                        : index; // Si no hay número, usar el índice
+                    
+                    const estado = (row.estado || 'disponible').toLowerCase().trim();
+                    
+                    const ticket = {
+                        numero: ticketNumber,
+                        nombre: row.nombre,
+                        telefono: row.telefono,
+                        estado: estado,
+                        displayNumero: String(ticketNumber).padStart(3, '0')
+                    };
+
+                    allTickets.push(ticket);
+                    stats.total++;
+
+                    if (estado === 'disponible') {
+                        stats.disponibles++;
+                    } else if (estado === 'ocupado' || estado === 'ocupada' || estado === 'vendido' || estado === 'vendida') {
+                        stats.ocupados++;
+                    } else if (estado === 'reservado' || estado === 'reservada') {
+                        stats.reservados++;
+                    }
+                });
+
+                // Actualizar estadísticas
+                document.getElementById('total-tickets').textContent = stats.total;
+                document.getElementById('disponibles').textContent = stats.disponibles;
+                document.getElementById('ocupados').textContent = stats.ocupados;
+                document.getElementById('reservados').textContent = stats.reservados;
+
+                // Renderizar tickets
+                renderTickets();
+
+                // Actualizar hora
+                document.getElementById('last-update').textContent = new Date().toLocaleString('es-ES');
+
+            } catch (error) {
+                console.error('Error al cargar tickets:', error);
+                loadingState.innerHTML = `
+                    <div class="text-red-600">
+                        <p class="text-xl font-bold mb-2">❌ Error al cargar tickets</p>
+                        <p>${error.message}</p>
+                        <button onclick="loadTickets()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                            Reintentar
+                        </button>
+                    </div>
+                `;
+            } finally {
+                loadingState.style.display = 'none';
+                ticketsGrid.style.display = 'grid';
+            }
+        }
+
+        // Renderizar tickets
+        function renderTickets() {
+            const grid = document.getElementById('tickets-grid');
+            grid.innerHTML = '';
+
+            const filtered = allTickets.filter(ticket => {
+                // Filtro por estado
+                if (currentFilter !== 'all') {
+                    const estadoLower = ticket.estado.toLowerCase();
+                    if (currentFilter === 'disponible' && estadoLower !== 'disponible') return false;
+                    if (currentFilter === 'ocupado' && !['ocupado', 'ocupada', 'vendido', 'vendida'].includes(estadoLower)) return false;
+                    if (currentFilter === 'reservado' && !['reservado', 'reservada'].includes(estadoLower)) return false;
+                }
+
+                // Filtro por búsqueda
+                if (searchTerm) {
+                    const search = searchTerm.toLowerCase();
+                    return ticket.displayNumero.includes(search) || 
+                           ticket.nombre.toLowerCase().includes(search) ||
+                           ticket.telefono.includes(search);
+                }
+
+                return true;
+            });
+
+            filtered.forEach(ticket => {
+                const card = document.createElement('div');
+                card.className = 'ticket-card bg-white rounded-lg shadow p-3 text-center cursor-pointer';
+                
+                const estadoClass = getEstadoClass(ticket.estado);
+                card.innerHTML = `
+                    <div class="font-bold text-lg mb-1">#${ticket.displayNumero}</div>
+                    <div class="text-xs px-2 py-1 rounded ${estadoClass} mb-2">
+                        ${ticket.estado.toUpperCase()}
+                    </div>
+                    ${ticket.nombre ? `<div class="text-xs text-gray-600 truncate" title="${ticket.nombre}">${ticket.nombre}</div>` : ''}
+                    ${ticket.telefono ? `<div class="text-xs text-gray-500">${ticket.telefono}</div>` : ''}
+                `;
+
+                card.onclick = () => {
+                    alert(`Ticket #${ticket.displayNumero}\nEstado: ${ticket.estado}\nNombre: ${ticket.nombre || 'N/A'}\nTeléfono: ${ticket.telefono || 'N/A'}`);
+                };
+
+                grid.appendChild(card);
+            });
+
+            // Mostrar mensaje si no hay resultados
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12 text-gray-500">
+                        <p class="text-xl mb-2">No se encontraron tickets</p>
+                        <p class="text-sm">Intenta cambiar los filtros o la búsqueda</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Obtener clase CSS según el estado
+        function getEstadoClass(estado) {
+            const estadoLower = estado.toLowerCase();
+            if (estadoLower === 'disponible') return 'status-disponible';
+            if (['ocupado', 'ocupada', 'vendido', 'vendida'].includes(estadoLower)) return 'status-ocupado';
+            if (['reservado', 'reservada'].includes(estadoLower)) return 'status-reservado';
+            return 'status-vendido';
+        }
+
+        // Filtrar tickets
+        function filterTickets(filter) {
+            currentFilter = filter;
+            
+            // Actualizar botones activos
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-purple-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            
+            const activeBtn = document.querySelector(`[data-filter="${filter}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active', 'bg-purple-600', 'text-white');
+                activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            }
+
+            renderTickets();
+        }
+
+        // Buscar tickets
+        function searchTickets() {
+            searchTerm = document.getElementById('search-input').value;
+            renderTickets();
+        }
+
+        // Cargar tickets al iniciar
+        loadTickets();
+
+        // Auto-actualizar cada 30 segundos
+        setInterval(loadTickets, 30000);
+    </script>
+</body>
+</html>
+
