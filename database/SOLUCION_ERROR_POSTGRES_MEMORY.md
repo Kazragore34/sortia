@@ -77,7 +77,7 @@ Context Window Length: 20
 
 2. **Prueba la expresión**:
    - En el campo "Session Key", haz clic en el icono de "test" o "preview"
-   - Debe mostrar algo como: `51986548321@s.whatsapp.net`
+   - Debe mostrar algo como: `34614465691@s.whatsapp.net`
    - Si muestra `undefined` o está vacío, la expresión está mal
 
 ---

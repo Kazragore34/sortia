@@ -846,7 +846,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n   \"to\": \"51986548321@s.whatsapp.net\",\n  \"text\": \"{{ $json.output }} , confirmar\"\n} ",
+        "jsonBody": "={\n   \"to\": \"34614465691@s.whatsapp.net\",\n  \"text\": \"{{ $json.output }} , confirmar\"\n} ",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",

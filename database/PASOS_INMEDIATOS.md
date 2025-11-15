@@ -49,7 +49,7 @@ Antes de probar el workflow completo:
 
 1. **Abre el nodo "Postgres Chat Memory"**
 2. **En el campo "Session Key"**, haz clic en el icono de "preview" o "test"
-3. **Debe mostrar**: `51986548321@s.whatsapp.net` (o tu número de WhatsApp)
+3. **Debe mostrar**: `34614465691@s.whatsapp.net` (o tu número de WhatsApp)
 4. **Si muestra `undefined`**: La expresión está mal o el webhook no tiene ese campo
 
 ---

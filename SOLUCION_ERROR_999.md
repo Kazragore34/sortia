@@ -49,7 +49,7 @@ return [{
   }
 }];
 ```
-
+    
 Luego, en el agente, usar `={{ $json.systemMessage }}` en lugar del prompt hardcodeado.
 
 ### Opción 2: Verificar que la variable esté disponible

@@ -48,7 +48,7 @@ El problema está en cómo está configurado el campo "Session ID" en la interfa
 
 4. **Verifica que el valor se resuelva**:
    - Haz clic en el icono de "preview" o "test" junto al campo
-   - Debe mostrar algo como: `51986548321@s.whatsapp.net`
+   - Debe mostrar algo como: `34614465691@s.whatsapp.net`
    - Si muestra `undefined` o está vacío, la expresión está mal
 
 5. **Verifica estos otros campos**:
