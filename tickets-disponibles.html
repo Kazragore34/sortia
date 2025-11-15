@@ -3,126 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tickets Disponibles - Sortia</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>API Tickets Disponibles - Sortia</title>
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 2rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
         }
-        .ticket-card {
-            transition: all 0.3s ease;
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .ticket-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
         }
-        .status-disponible {
-            background-color: #10b981;
-            color: white;
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
         }
-        .status-ocupado {
-            background-color: #ef4444;
-            color: white;
+        .data-display {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
         }
-        .status-reservado {
-            background-color: #f59e0b;
-            color: white;
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
         }
-        .status-vendido {
-            background-color: #6b7280;
-            color: white;
+        .stat:last-child {
+            border-bottom: none;
+        }
+        .stat-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        .stat-value {
+            color: #212529;
+            font-size: 1.1em;
+        }
+        .json-display {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-top: 20px;
         }
         .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
+            text-align: center;
+            padding: 40px;
+            color: #666;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
         }
     </style>
 </head>
 <body>
-    <div class="max-w-7xl mx-auto">
-        <!-- Header -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">🎫 Tickets Disponibles</h1>
-            <p class="text-gray-600">Consulta el estado de todos los tickets del sorteo</p>
+    <div class="container">
+        <h1>🎫 API Tickets Disponibles</h1>
+        <p class="subtitle">Información para n8n - Solo estadísticas públicas</p>
+
+        <div id="loading-state" class="loading">
+            <p>Cargando datos desde Google Sheets...</p>
         </div>
 
-        <!-- Estadísticas -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <div class="text-sm text-gray-600 mb-1">Total Tickets</div>
-                <div class="text-3xl font-bold text-gray-800" id="total-tickets">1000</div>
-            </div>
-            <div class="bg-green-50 rounded-lg shadow-lg p-6 border-2 border-green-500">
-                <div class="text-sm text-green-700 mb-1">Disponibles</div>
-                <div class="text-3xl font-bold text-green-600" id="disponibles">-</div>
-            </div>
-            <div class="bg-red-50 rounded-lg shadow-lg p-6 border-2 border-red-500">
-                <div class="text-sm text-red-700 mb-1">Ocupados</div>
-                <div class="text-3xl font-bold text-red-600" id="ocupados">-</div>
-            </div>
-            <div class="bg-yellow-50 rounded-lg shadow-lg p-6 border-2 border-yellow-500">
-                <div class="text-sm text-yellow-700 mb-1">Reservados</div>
-                <div class="text-3xl font-bold text-yellow-600" id="reservados">-</div>
-            </div>
-        </div>
-
-        <!-- Filtros y búsqueda -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div class="flex gap-2 flex-wrap">
-                    <button onclick="filterTickets('all')" class="filter-btn px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 active" data-filter="all">
-                        Todos
-                    </button>
-                    <button onclick="filterTickets('disponible')" class="filter-btn px-4 py-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200" data-filter="disponible">
-                        Disponibles
-                    </button>
-                    <button onclick="filterTickets('ocupado')" class="filter-btn px-4 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200" data-filter="ocupado">
-                        Ocupados
-                    </button>
-                    <button onclick="filterTickets('reservado')" class="filter-btn px-4 py-2 rounded-lg bg-yellow-100 text-yellow-700 hover:bg-yellow-200" data-filter="reservado">
-                        Reservados
-                    </button>
+        <div id="data-display" style="display: none;">
+            <div class="data-display">
+                <div class="stat">
+                    <span class="stat-label">Fecha y Hora:</span>
+                    <span class="stat-value" id="fecha-actualizacion">-</span>
                 </div>
-                <div class="flex gap-2 items-center">
-                    <input 
-                        type="text" 
-                        id="search-input" 
-                        placeholder="Buscar por número..." 
-                        class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        onkeyup="searchTickets()"
-                    >
-                    <button onclick="loadTickets()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-                        🔄 Actualizar
-                    </button>
+                <div class="stat">
+                    <span class="stat-label">Tickets Disponibles:</span>
+                    <span class="stat-value" id="disponibles">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Total Tickets:</span>
+                    <span class="stat-value" id="total-tickets">1000</span>
                 </div>
             </div>
+
+            <h3 style="margin-top: 30px; color: #333;">JSON para n8n:</h3>
+            <div class="json-display" id="json-output">
+                {/* Cargando... */}
+            </div>
         </div>
 
-        <!-- Estado de carga -->
-        <div id="loading-state" class="bg-white rounded-lg shadow-lg p-12 text-center">
-            <div class="loading mx-auto mb-4"></div>
-            <p class="text-gray-600">Cargando tickets desde Google Sheets...</p>
-        </div>
-
-        <!-- Grid de tickets -->
-        <div id="tickets-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-3 mb-6" style="display: none;">
-            <!-- Los tickets se cargarán aquí dinámicamente -->
-        </div>
-
-        <!-- Información -->
-        <div class="bg-white rounded-lg shadow-lg p-6 text-center text-gray-600">
-            <p>Última actualización: <span id="last-update">-</span></p>
-            <p class="text-sm mt-2">Los datos se actualizan automáticamente cada 30 segundos</p>
+        <div id="error-display" style="display: none;" class="error">
+            <strong>Error:</strong> <span id="error-message"></span>
         </div>
     </div>
 
@@ -141,10 +125,6 @@
                 }
             }
         };
-
-        let allTickets = [];
-        let currentFilter = 'all';
-        let searchTerm = '';
 
         // Clase simplificada para leer Google Sheets
         class GoogleSheetsReader {
@@ -168,23 +148,22 @@
                 if (!data.values || data.values.length === 0) return { rows: [] };
                 
                 const rows = data.values.map(row => ({
-                    numero: row[0] !== undefined ? Number(row[0]) : null,
-                    nombre: row[1] || '',
-                    telefono: row[2] || '',
-                    estado: (row[3] || '').trim()
+                    estado: (row[3] || '').trim() // Solo leer el estado, NO nombres ni teléfonos
                 }));
 
                 return { rows };
             }
         }
 
-        // Cargar tickets
-        async function loadTickets() {
+        // Cargar y procesar datos
+        async function loadData() {
             const loadingState = document.getElementById('loading-state');
-            const ticketsGrid = document.getElementById('tickets-grid');
+            const dataDisplay = document.getElementById('data-display');
+            const errorDisplay = document.getElementById('error-display');
             
             loadingState.style.display = 'block';
-            ticketsGrid.style.display = 'none';
+            dataDisplay.style.display = 'none';
+            errorDisplay.style.display = 'none';
 
             try {
                 const reader = new GoogleSheetsReader(
@@ -197,167 +176,118 @@
                     CONFIG.googleSheets.options
                 );
 
-                // Procesar tickets
-                allTickets = [];
-                const stats = {
-                    total: 0,
-                    disponibles: 0,
-                    ocupados: 0,
-                    reservados: 0
-                };
-
-                data.rows.forEach((row, index) => {
-                    const ticketNumber = row.numero !== null && !isNaN(row.numero) 
-                        ? row.numero 
-                        : index; // Si no hay número, usar el índice
-                    
+                // Contar tickets disponibles (solo contar, sin guardar datos personales)
+                let disponibles = 0;
+                data.rows.forEach(row => {
                     const estado = (row.estado || 'disponible').toLowerCase().trim();
-                    
-                    const ticket = {
-                        numero: ticketNumber,
-                        nombre: row.nombre,
-                        telefono: row.telefono,
-                        estado: estado,
-                        displayNumero: String(ticketNumber).padStart(3, '0')
-                    };
-
-                    allTickets.push(ticket);
-                    stats.total++;
-
                     if (estado === 'disponible') {
-                        stats.disponibles++;
-                    } else if (estado === 'ocupado' || estado === 'ocupada' || estado === 'vendido' || estado === 'vendida') {
-                        stats.ocupados++;
-                    } else if (estado === 'reservado' || estado === 'reservada') {
-                        stats.reservados++;
+                        disponibles++;
                     }
                 });
 
-                // Actualizar estadísticas
-                document.getElementById('total-tickets').textContent = stats.total;
-                document.getElementById('disponibles').textContent = stats.disponibles;
-                document.getElementById('ocupados').textContent = stats.ocupados;
-                document.getElementById('reservados').textContent = stats.reservados;
+                // Obtener fecha y hora actual
+                const now = new Date();
+                const fechaISO = now.toISOString();
+                const fechaFormateada = now.toLocaleString('es-ES', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    timeZone: 'Europe/Madrid'
+                });
 
-                // Renderizar tickets
-                renderTickets();
-
-                // Actualizar hora
-                document.getElementById('last-update').textContent = new Date().toLocaleString('es-ES');
-
-            } catch (error) {
-                console.error('Error al cargar tickets:', error);
-                loadingState.innerHTML = `
-                    <div class="text-red-600">
-                        <p class="text-xl font-bold mb-2">❌ Error al cargar tickets</p>
-                        <p>${error.message}</p>
-                        <button onclick="loadTickets()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-                            Reintentar
-                        </button>
-                    </div>
-                `;
-            } finally {
-                loadingState.style.display = 'none';
-                ticketsGrid.style.display = 'grid';
-            }
-        }
-
-        // Renderizar tickets
-        function renderTickets() {
-            const grid = document.getElementById('tickets-grid');
-            grid.innerHTML = '';
-
-            const filtered = allTickets.filter(ticket => {
-                // Filtro por estado
-                if (currentFilter !== 'all') {
-                    const estadoLower = ticket.estado.toLowerCase();
-                    if (currentFilter === 'disponible' && estadoLower !== 'disponible') return false;
-                    if (currentFilter === 'ocupado' && !['ocupado', 'ocupada', 'vendido', 'vendida'].includes(estadoLower)) return false;
-                    if (currentFilter === 'reservado' && !['reservado', 'reservada'].includes(estadoLower)) return false;
-                }
-
-                // Filtro por búsqueda
-                if (searchTerm) {
-                    const search = searchTerm.toLowerCase();
-                    return ticket.displayNumero.includes(search) || 
-                           ticket.nombre.toLowerCase().includes(search) ||
-                           ticket.telefono.includes(search);
-                }
-
-                return true;
-            });
-
-            filtered.forEach(ticket => {
-                const card = document.createElement('div');
-                card.className = 'ticket-card bg-white rounded-lg shadow p-3 text-center cursor-pointer';
-                
-                const estadoClass = getEstadoClass(ticket.estado);
-                card.innerHTML = `
-                    <div class="font-bold text-lg mb-1">#${ticket.displayNumero}</div>
-                    <div class="text-xs px-2 py-1 rounded ${estadoClass} mb-2">
-                        ${ticket.estado.toUpperCase()}
-                    </div>
-                    ${ticket.nombre ? `<div class="text-xs text-gray-600 truncate" title="${ticket.nombre}">${ticket.nombre}</div>` : ''}
-                    ${ticket.telefono ? `<div class="text-xs text-gray-500">${ticket.telefono}</div>` : ''}
-                `;
-
-                card.onclick = () => {
-                    alert(`Ticket #${ticket.displayNumero}\nEstado: ${ticket.estado}\nNombre: ${ticket.nombre || 'N/A'}\nTeléfono: ${ticket.telefono || 'N/A'}`);
+                // Crear objeto JSON para n8n
+                const jsonData = {
+                    fecha: fechaISO,
+                    fecha_formateada: fechaFormateada,
+                    tickets_disponibles: disponibles,
+                    tickets_totales: CONFIG.totalTickets,
+                    tickets_ocupados: CONFIG.totalTickets - disponibles,
+                    timestamp: Math.floor(now.getTime() / 1000)
                 };
 
-                grid.appendChild(card);
-            });
+                // Actualizar la interfaz
+                document.getElementById('fecha-actualizacion').textContent = fechaFormateada;
+                document.getElementById('disponibles').textContent = disponibles;
+                document.getElementById('total-tickets').textContent = CONFIG.totalTickets;
+                document.getElementById('json-output').textContent = JSON.stringify(jsonData, null, 2);
 
-            // Mostrar mensaje si no hay resultados
-            if (filtered.length === 0) {
-                grid.innerHTML = `
-                    <div class="col-span-full text-center py-12 text-gray-500">
-                        <p class="text-xl mb-2">No se encontraron tickets</p>
-                        <p class="text-sm">Intenta cambiar los filtros o la búsqueda</p>
-                    </div>
-                `;
+                // Mostrar datos
+                loadingState.style.display = 'none';
+                dataDisplay.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error al cargar datos:', error);
+                loadingState.style.display = 'none';
+                errorDisplay.style.display = 'block';
+                document.getElementById('error-message').textContent = error.message;
             }
         }
 
-        // Obtener clase CSS según el estado
-        function getEstadoClass(estado) {
-            const estadoLower = estado.toLowerCase();
-            if (estadoLower === 'disponible') return 'status-disponible';
-            if (['ocupado', 'ocupada', 'vendido', 'vendida'].includes(estadoLower)) return 'status-ocupado';
-            if (['reservado', 'reservada'].includes(estadoLower)) return 'status-reservado';
-            return 'status-vendido';
-        }
+        // Función para obtener JSON (para n8n)
+        async function getJSONData() {
+            try {
+                const reader = new GoogleSheetsReader(
+                    CONFIG.googleSheets.sheetId,
+                    CONFIG.googleSheets.sheetName
+                );
 
-        // Filtrar tickets
-        function filterTickets(filter) {
-            currentFilter = filter;
-            
-            // Actualizar botones activos
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active', 'bg-purple-600', 'text-white');
-                btn.classList.add('bg-gray-200', 'text-gray-700');
-            });
-            
-            const activeBtn = document.querySelector(`[data-filter="${filter}"]`);
-            if (activeBtn) {
-                activeBtn.classList.add('active', 'bg-purple-600', 'text-white');
-                activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                const data = await reader.fetchData(
+                    CONFIG.googleSheets.method,
+                    CONFIG.googleSheets.options
+                );
+
+                let disponibles = 0;
+                data.rows.forEach(row => {
+                    const estado = (row.estado || 'disponible').toLowerCase().trim();
+                    if (estado === 'disponible') {
+                        disponibles++;
+                    }
+                });
+
+                const now = new Date();
+                return {
+                    fecha: now.toISOString(),
+                    fecha_formateada: now.toLocaleString('es-ES', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        timeZone: 'Europe/Madrid'
+                    }),
+                    tickets_disponibles: disponibles,
+                    tickets_totales: CONFIG.totalTickets,
+                    tickets_ocupados: CONFIG.totalTickets - disponibles,
+                    timestamp: Math.floor(now.getTime() / 1000)
+                };
+            } catch (error) {
+                throw error;
             }
-
-            renderTickets();
         }
 
-        // Buscar tickets
-        function searchTickets() {
-            searchTerm = document.getElementById('search-input').value;
-            renderTickets();
+        // Si se accede con ?json=true, devolver solo JSON
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('json') === 'true') {
+            getJSONData().then(data => {
+                document.body.innerHTML = '';
+                document.body.style.margin = '0';
+                document.body.style.padding = '20px';
+                document.body.style.fontFamily = 'monospace';
+                document.body.textContent = JSON.stringify(data, null, 2);
+            }).catch(error => {
+                document.body.textContent = JSON.stringify({ error: error.message }, null, 2);
+            });
+        } else {
+            // Cargar datos al iniciar
+            loadData();
+
+            // Auto-actualizar cada 30 segundos
+            setInterval(loadData, 30000);
         }
-
-        // Cargar tickets al iniciar
-        loadTickets();
-
-        // Auto-actualizar cada 30 segundos
-        setInterval(loadTickets, 30000);
     </script>
 </body>
 </html>
