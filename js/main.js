@@ -25,7 +25,9 @@ const CONFIG = {
             // API Key de Google Cloud Console
             apiKey: 'AIzaSyBTg5ozE85sC1Qvw2ZbxnTW5Jxnn0cL4iE',
             // Rango específico a leer (columna D desde fila 2 hasta 1002 - columna de estado)
-            range: 'D2:D1002'
+            range: 'D2:D1002',
+            // Rango para obtener números de tickets y estados (columna A = número, columna D = estado)
+            ticketsRange: 'A2:D1002'
         }
     }
 };
@@ -183,7 +185,7 @@ class GoogleSheetsReader {
             }
             
             const data = await response.json();
-            return this.parseAPIResponse(data);
+            return this.parseAPIResponse(data, range);
         } catch (error) {
             console.error('Error al leer desde Google Sheets API:', error);
             throw error;
@@ -291,11 +293,28 @@ class GoogleSheetsReader {
 
     /**
      * Parsea respuesta de la API de Google Sheets
-     * Si se lee un rango específico (como D2:D1002), crea una estructura compatible
+     * Si se lee un rango específico (como D2:D1002 o A2:D1002), crea una estructura compatible
+     * @param {object} data - Datos de la API
+     * @param {string} range - Rango leído (opcional, para detectar si hay headers)
      */
-    parseAPIResponse(data) {
+    parseAPIResponse(data, range = null) {
         if (!data.values || data.values.length === 0) {
-            return { headers: ['Estado'], rows: [] };
+            return { headers: ['Estado'], rows: [], values: [] };
+        }
+
+        // Mantener los values originales para acceso directo
+        const originalValues = data.values;
+
+        // Detectar si el rango empieza desde la fila 2 (sin headers) o fila 1 (con headers)
+        // Si el rango es A2:D1002 o D2:D1002, no hay headers (empieza en fila 2)
+        // Si el rango es A1:D1002 o no especifica fila, asumimos que hay headers
+        let hasHeaders = true; // Por defecto asumimos headers
+        if (range) {
+            // Si el rango empieza con una letra seguida de "2" o mayor, no hay headers
+            const match = range.match(/^[A-Z]+(\d+)/);
+            if (match && parseInt(match[1]) >= 2) {
+                hasHeaders = false;
+            }
         }
 
         // Si solo hay una columna (rango D2:D1002), crear estructura con header 'Estado'
@@ -304,22 +323,44 @@ class GoogleSheetsReader {
             for (let i = 0; i < data.values.length; i++) {
                 rows.push({ 'Estado': data.values[i][0] || '' });
             }
-            return { headers: ['Estado'], rows };
+            return { headers: ['Estado'], rows, values: originalValues };
         }
 
-        // Si hay múltiples columnas, usar la primera fila como headers
-        const headers = data.values[0];
-        const rows = [];
+        // Si hay múltiples columnas
+        if (hasHeaders && data.values.length > 0) {
+            // Usar la primera fila como headers
+            const headers = data.values[0];
+            const rows = [];
 
-        for (let i = 1; i < data.values.length; i++) {
-            const row = {};
-            headers.forEach((header, index) => {
-                row[header] = data.values[i][index] || '';
-            });
-            rows.push(row);
+            for (let i = 1; i < data.values.length; i++) {
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = data.values[i][index] || '';
+                });
+                rows.push(row);
+            }
+
+            return { headers, rows, values: originalValues };
+        } else {
+            // No hay headers, todas las filas son datos
+            // Crear headers genéricos basados en el número de columnas
+            const numColumns = data.values[0]?.length || 4;
+            const headers = [];
+            for (let i = 0; i < numColumns; i++) {
+                headers.push(`Columna${String.fromCharCode(65 + i)}`); // A, B, C, D...
+            }
+
+            const rows = [];
+            for (let i = 0; i < data.values.length; i++) {
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = data.values[i][index] || '';
+                });
+                rows.push(row);
+            }
+
+            return { headers, rows, values: originalValues };
         }
-
-        return { headers, rows };
     }
 
     /**
@@ -370,6 +411,81 @@ class GoogleSheetsReader {
             const status = (row[statusColumn] || '').toLowerCase().trim();
             return statusList.map(s => s.toLowerCase()).includes(status);
         }).length;
+    }
+
+    /**
+     * Obtiene un mapa de números de tickets y sus estados
+     * @param {object} data - Datos del sheet con columnas A (número) y D (estado)
+     * @returns {Map<number, string>} Mapa de número de ticket -> estado
+     */
+    getTicketsMap(data) {
+        const ticketsMap = new Map();
+        
+        if (!data) return ticketsMap;
+
+        // Priorizar values (formato API directo) si está disponible
+        if (data.values && data.values.length > 0) {
+            // Asumimos que la primera columna (índice 0) es el número y la cuarta (índice 3) es el estado
+            // Si el rango es A2:D1002, no hay header, así que usamos directamente los valores
+            for (let i = 0; i < data.values.length; i++) {
+                const row = data.values[i];
+                if (row && row.length >= 4) {
+                    const ticketNumber = parseInt(row[0]) || null;
+                    const status = (row[3] || '').trim();
+                    if (ticketNumber !== null && ticketNumber >= 0 && ticketNumber <= 999) {
+                        ticketsMap.set(ticketNumber, status);
+                    }
+                } else if (row && row.length === 1) {
+                    // Si solo hay una columna (rango D2:D1002), usar el índice de la fila como número
+                    const ticketNumber = i; // Índice de fila (0-999)
+                    const status = (row[0] || '').trim();
+                    if (ticketNumber >= 0 && ticketNumber <= 999) {
+                        ticketsMap.set(ticketNumber, status);
+                    }
+                }
+            }
+        } else if (data.rows && data.headers) {
+            // Si data tiene rows (formato parseado), buscar columnas por nombre
+            const numberColumn = data.headers.find(h => 
+                ['Número', 'Numero', 'Ticket', 'Número Ticket', 'id_tickets'].includes(h)
+            ) || data.headers[0];
+            const statusColumn = data.headers.find(h => 
+                ['Estado', 'Status', 'estado', 'status'].includes(h)
+            ) || data.headers[3];
+
+            data.rows.forEach(row => {
+                const ticketNumber = parseInt(row[numberColumn]) || null;
+                const status = (row[statusColumn] || '').trim();
+                if (ticketNumber !== null && ticketNumber >= 0 && ticketNumber <= 999) {
+                    ticketsMap.set(ticketNumber, status);
+                }
+            });
+        }
+
+        return ticketsMap;
+    }
+
+    /**
+     * Obtiene lista de números de tickets ocupados
+     * @param {object} data - Datos del sheet
+     * @returns {Array<number>} Array de números de tickets ocupados
+     */
+    getOccupiedTickets(data) {
+        const ticketsMap = this.getTicketsMap(data);
+        const occupied = [];
+        
+        ticketsMap.forEach((status, ticketNumber) => {
+            const statusLower = status.toLowerCase().trim();
+            const notAvailable = [
+                'vendido', 'reservado', 'ocupado', 'ocupada',
+                'vendida', 'reservada', 'comprado', 'comprada'
+            ];
+            if (notAvailable.includes(statusLower)) {
+                occupied.push(ticketNumber);
+            }
+        });
+
+        return occupied;
     }
 }
 
@@ -764,7 +880,7 @@ function handlePurchase(amount) {
 // ============================================
 // MODAL DE COMPRA
 // ============================================
-function openPurchaseModal(amount) {
+async function openPurchaseModal(amount) {
     const modal = document.getElementById('purchase-modal');
     const ticketAmount = document.getElementById('modal-ticket-amount');
     const totalDisplay = document.getElementById('modal-total');
@@ -780,9 +896,68 @@ function openPurchaseModal(amount) {
     document.getElementById('customer-lastname').value = '';
     document.getElementById('customer-phone').value = '';
     
+    // Cargar y poblar el select de números de tickets
+    await loadTicketNumbers();
+    
     // Mostrar modal
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+}
+
+/**
+ * Carga los números de tickets desde Google Sheets y pobla el select
+ */
+async function loadTicketNumbers() {
+    const select = document.getElementById('ticket-number');
+    if (!select) return;
+
+    // Mostrar estado de carga
+    select.innerHTML = '<option value="">Cargando números disponibles...</option>';
+    select.disabled = true;
+
+    try {
+        const googleSheets = new GoogleSheetsReader(
+            CONFIG.googleSheets.sheetId,
+            CONFIG.googleSheets.sheetName || 'Hoja 1'
+        );
+
+        // Leer el rango completo con números y estados
+        const method = CONFIG.googleSheets?.method || 'api';
+        const options = {
+            ...CONFIG.googleSheets?.options,
+            range: CONFIG.googleSheets?.options?.ticketsRange || 'A2:D1002'
+        };
+
+        const data = await googleSheets.fetchData(method, options);
+        
+        // Obtener números ocupados
+        const occupiedTickets = googleSheets.getOccupiedTickets(data);
+        const occupiedSet = new Set(occupiedTickets);
+
+        // Limpiar el select
+        select.innerHTML = '<option value="">Selecciona un número de ticket</option>';
+
+        // Poblar con todos los números del 0 al 999
+        for (let i = 0; i <= 999; i++) {
+            const option = document.createElement('option');
+            const paddedNumber = String(i).padStart(3, '0');
+            option.value = i;
+            option.textContent = `Ticket #${paddedNumber}`;
+            
+            if (occupiedSet.has(i)) {
+                option.disabled = true;
+                option.classList.add('ticket-occupied');
+            }
+            
+            select.appendChild(option);
+        }
+
+        select.disabled = false;
+    } catch (error) {
+        console.error('Error al cargar números de tickets:', error);
+        select.innerHTML = '<option value="">Error al cargar números. Intenta de nuevo.</option>';
+        select.disabled = false;
+    }
 }
 
 function closePurchaseModal() {
@@ -818,11 +993,12 @@ function initPurchaseModal() {
             const name = document.getElementById('customer-name').value.trim();
             const lastname = document.getElementById('customer-lastname').value.trim();
             const phone = document.getElementById('customer-phone').value.trim();
+            const ticketNumber = document.getElementById('ticket-number').value;
             const ticketAmount = document.getElementById('modal-ticket-amount').textContent;
             const total = document.getElementById('modal-total').textContent;
             
             // Validar campos
-            if (!name || !lastname || !phone) {
+            if (!name || !lastname || !phone || !ticketNumber) {
                 alert('Por favor, completa todos los campos obligatorios.');
                 return;
             }
@@ -834,7 +1010,7 @@ function initPurchaseModal() {
             }
             
             // Generar y abrir link de WhatsApp
-            generateWhatsAppLink(name, lastname, phone, ticketAmount, total);
+            generateWhatsAppLink(name, lastname, phone, ticketAmount, total, ticketNumber);
         });
     }
     
@@ -849,11 +1025,13 @@ function initPurchaseModal() {
 // ============================================
 // GENERAR LINK DE WHATSAPP
 // ============================================
-function generateWhatsAppLink(name, lastname, phone, ticketAmount, total) {
+function generateWhatsAppLink(name, lastname, phone, ticketAmount, total, ticketNumber) {
+    const paddedTicketNumber = String(ticketNumber).padStart(3, '0');
     const message = `¡Hola! Me interesa participar en el sorteo de la Yamaha NMAX.
 
 📋 *Información de la compra:*
 • Cantidad de tickets: ${ticketAmount}
+• Número de ticket seleccionado: #${paddedTicketNumber}
 • Total a pagar: ${total}
 
 👤 *Mis datos:*

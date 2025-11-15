@@ -1,0 +1,82 @@
+{
+  "name": "My workflow 12",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst supabaseData = [];\n\nfor (const item of items) {\n  const row = item.json;\n  \n  // Ajusta estos campos según la estructura de tu Google Sheet\n  const ticketData = {\n    id_tickets: parseInt(row['Número Ticket'] || row['A'] || 0),\n    nombre: row['Nombre'] || row['B'] || '',\n    telefono: row['Teléfono'] || row['C'] || '',\n    estado: mapEstadoToSupabase(row['Estado'] || row['D'] || 'disponible'),\n    // Agrega más campos según tu estructura\n  };\n  \n  supabaseData.push(ticketData);\n}\n\n// Función para mapear estados\nfunction mapEstadoToSupabase(estado) {\n  const estadoLower = (estado || '').toLowerCase();\n  if (estadoLower.includes('vendido') || estadoLower.includes('ocupado')) {\n    return 'ocupado';\n  }\n  if (estadoLower.includes('reservado')) {\n    return 'reservado';\n  }\n  return 'disponible';\n}\n\nreturn supabaseData.map(data => ({ json: data }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        16
+      ],
+      "id": "deeb0de7-fe90-4471-9612-edde0171ce87",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s",
+          "mode": "list",
+          "cachedResultName": "tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "estado",
+              "lookupValue": "ocupado"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        96,
+        16
+      ],
+      "id": "459d3696-57d4-4776-869e-a7430e884209",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "9oudKC11RD60niMp",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "",
+  "meta": {
+    "instanceId": "425dcbb7cf21254c20a315e6d07d3081a8af6852f16eb63d1c74bff89f13e6ec"
+  },
+  "tags": []
+}
