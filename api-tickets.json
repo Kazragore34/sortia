@@ -43,13 +43,30 @@
             parseResponse(data) {
                 if (!data.values || data.values.length === 0) return { rows: [] };
                 
-                // Solo leer el estado, NO nombres ni teléfonos
-                const rows = data.values.map(row => ({
-                    estado: (row[3] || '').trim()
-                }));
+                // Leer número de ticket y estado
+                const rows = data.values.map((row, index) => {
+                    const ticketNumber = row[0] !== undefined && row[0] !== '' && !isNaN(Number(row[0]))
+                        ? Number(row[0])
+                        : index; // Si no hay número, usar el índice
+                    
+                    return {
+                        numero: ticketNumber,
+                        estado: (row[3] || '').trim()
+                    };
+                });
 
                 return { rows };
             }
+        }
+
+        // Función para formatear lista de números de manera eficiente
+        function formatNumberList(numbers) {
+            // Ordenar números
+            const sorted = [...numbers].sort((a, b) => a - b);
+            
+            // Formato compacto: "0,1,2,3,4,5" o rangos "0-5,10,15-20"
+            // Por simplicidad, usar formato de lista separada por comas
+            return sorted.join(',');
         }
 
         // Función para obtener JSON (para n8n)
@@ -65,16 +82,31 @@
                     CONFIG.googleSheets.options
                 );
 
-                // Contar tickets disponibles (solo contar, sin guardar datos personales)
-                let disponibles = 0;
+                // Separar tickets disponibles y ocupados
+                const disponibles = [];
+                const ocupados = [];
+                
                 data.rows.forEach(row => {
                     const estado = (row.estado || 'disponible').toLowerCase().trim();
+                    const numero = row.numero;
+                    
                     if (estado === 'disponible') {
-                        disponibles++;
+                        disponibles.push(numero);
+                    } else {
+                        // Considerar ocupado: ocupado, ocupada, vendido, vendida, reservado, reservada
+                        ocupados.push(numero);
                     }
                 });
 
+                const totalOcupados = ocupados.length;
+                const totalDisponibles = disponibles.length;
                 const now = new Date();
+
+                // Decidir qué lista incluir (optimización de tokens)
+                // Si hay menos de 500 ocupados, listar ocupados
+                // Si hay 500 o más ocupados, listar disponibles
+                const incluirOcupados = totalOcupados < 500;
+                
                 const jsonData = {
                     fecha: now.toISOString(),
                     fecha_formateada: now.toLocaleString('es-ES', {
@@ -86,11 +118,27 @@
                         second: '2-digit',
                         timeZone: 'Europe/Madrid'
                     }),
-                    tickets_disponibles: disponibles,
+                    tickets_disponibles: totalDisponibles,
                     tickets_totales: CONFIG.totalTickets,
-                    tickets_ocupados: CONFIG.totalTickets - disponibles,
+                    tickets_ocupados: totalOcupados,
                     timestamp: Math.floor(now.getTime() / 1000)
                 };
+
+                // Agregar lista según corresponda
+                if (incluirOcupados) {
+                    jsonData.numeros_ocupados = formatNumberList(ocupados);
+                    jsonData.lista_tipo = 'ocupados';
+                } else {
+                    jsonData.numeros_disponibles = formatNumberList(disponibles);
+                    jsonData.lista_tipo = 'disponibles';
+                }
+
+                // También incluir formato de texto para fácil inserción en prompts
+                if (incluirOcupados) {
+                    jsonData.numeros_ocupados_texto = `Números ocupados: ${formatNumberList(ocupados)}`;
+                } else {
+                    jsonData.numeros_disponibles_texto = `Números disponibles: ${formatNumberList(disponibles)}`;
+                }
 
                 // Devolver JSON
                 document.body.textContent = JSON.stringify(jsonData, null, 2);
