@@ -124,20 +124,13 @@
                     timestamp: Math.floor(now.getTime() / 1000)
                 };
 
-                // Agregar lista según corresponda
+                // Agregar lista según corresponda (solo números, sin texto adicional)
                 if (incluirOcupados) {
                     jsonData.numeros_ocupados = formatNumberList(ocupados);
                     jsonData.lista_tipo = 'ocupados';
                 } else {
                     jsonData.numeros_disponibles = formatNumberList(disponibles);
                     jsonData.lista_tipo = 'disponibles';
-                }
-
-                // También incluir formato de texto para fácil inserción en prompts
-                if (incluirOcupados) {
-                    jsonData.numeros_ocupados_texto = `Números ocupados: ${formatNumberList(ocupados)}`;
-                } else {
-                    jsonData.numeros_disponibles_texto = `Números disponibles: ${formatNumberList(disponibles)}`;
                 }
 
                 // Devolver JSON
