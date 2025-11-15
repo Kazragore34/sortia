@@ -11,7 +11,7 @@ const CONFIG = {
     totalTickets: 1000, // Tickets del 000 al 999
     ticketPrice: 8, // euros
     minTickets: 2,
-    whatsappNumber: '34614465691', // Número de WhatsApp (sin el +)
+    whatsappNumber: '34614841783', // Número de WhatsApp (sin el +)
     // Configuración de Google Sheets
     googleSheets: {
         // ID del Google Sheet
@@ -1555,7 +1555,9 @@ ${ticketsList}
 • Nombre completo: ${name} ${lastname}
 • Teléfono: ${phone}
 
-Por favor, confírmame la disponibilidad de estos números y cómo proceder con el pago. ¡Gracias!`;
+Por favor, confírmame la disponibilidad de estos números y cómo proceder con el pago. ¡Gracias!
+
+Enviado desde la web.`;
 
     // Codificar el mensaje para URL
     const encodedMessage = encodeURIComponent(message);
