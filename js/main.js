@@ -24,10 +24,11 @@ const CONFIG = {
         options: {
             // API Key de Google Cloud Console
             apiKey: 'AIzaSyBTg5ozE85sC1Qvw2ZbxnTW5Jxnn0cL4iE',
-            // Rango específico a leer (columna D desde fila 2 hasta 1002 - columna de estado)
-            range: 'D2:D1002',
+            // Rango específico a leer (columna D desde fila 2 hasta 1001 - columna de estado)
+            // Tickets del 000 al 999 = 1000 tickets (filas 2 a 1001)
+            range: 'D2:D1001',
             // Rango para obtener números de tickets y estados (columna A = número, columna D = estado)
-            ticketsRange: 'A2:D1002',
+            ticketsRange: 'A2:D1001',
             // URL del Google Apps Script para actualizar tickets (opcional, pero recomendado)
             // Obtén esta URL siguiendo las instrucciones en GOOGLE_APPS_SCRIPT_UPDATE.md
             updateScriptUrl: 'https://script.google.com/macros/s/AKfycby4vLlAaVMc2GCk7XqBRR8c8jBvRUonutuWBVgdYqnSWPKlzVO2LG66MocfnDjeiZac4g/exec'
@@ -429,7 +430,8 @@ class GoogleSheetsReader {
         // Priorizar values (formato API directo) si está disponible
         if (data.values && data.values.length > 0) {
             // Estructura: A=numero (contiene el número de ticket), B=nombre, C=telefono, D=estado
-            // Si el rango es A2:D1002, no hay header, así que usamos directamente los valores
+            // Si el rango es A2:D1001, no hay header, así que usamos directamente los valores
+            // Fila 2 = Ticket 000, Fila 3 = Ticket 001, ..., Fila 1001 = Ticket 999 (1000 tickets total)
             for (let i = 0; i < data.values.length; i++) {
                 const row = data.values[i];
                 if (row && row.length >= 4) {
@@ -444,7 +446,7 @@ class GoogleSheetsReader {
                         ticketsMap.set(ticketNumber, status);
                     }
                 } else if (row && row.length === 1) {
-                    // Si solo hay una columna (rango D2:D1002), usar el índice de la fila como número
+                    // Si solo hay una columna (rango D2:D1001), usar el índice de la fila como número
                     const ticketNumber = i; // Índice de fila (0-999)
                     const status = (row[0] || '').trim();
                     if (ticketNumber >= 0 && ticketNumber <= 999) {
@@ -607,8 +609,10 @@ class TicketsCounter {
                 const reserved = this.googleSheets.countByStatus(data, statusColumn, ['reservado', 'reservada']);
                 
                 console.log(`📊 Tickets vendidos/ocupados: ${sold}, Reservados: ${reserved}, Disponibles: ${totalAvailable}, Total NO disponibles: ${totalSold}`);
+                console.log(`🔢 Rango de tickets: 000-999 (${this.totalTickets} tickets totales)`);
+                console.log(`📈 Cálculo: ${this.totalTickets} totales - ${totalSold} NO disponibles = ${this.totalTickets - totalSold} disponibles (contados: ${totalAvailable})`);
             } else if (data.headers && data.headers.length > 0) {
-                // Si hay headers, usar el primero (caso del rango D2:D1002)
+                // Si hay headers, usar el primero (caso del rango D2:D1001)
                 statusColumn = data.headers[0];
                 
                 console.log(`📋 Usando columna: "${statusColumn}"`);
@@ -622,6 +626,8 @@ class TicketsCounter {
                 const reserved = this.googleSheets.countByStatus(data, statusColumn, ['reservado', 'reservada']);
                 
                 console.log(`📊 Columna D detectada (${statusColumn}) - Vendidos/ocupados: ${sold}, Reservados: ${reserved}, Disponibles: ${totalAvailable}, Total NO disponibles: ${totalSold}`);
+                console.log(`🔢 Rango de tickets: 000-999 (${this.totalTickets} tickets totales)`);
+                console.log(`📈 Cálculo: ${this.totalTickets} totales - ${totalSold} NO disponibles = ${this.totalTickets - totalSold} disponibles (contados: ${totalAvailable})`);
                 
                 // Mostrar algunos valores de ejemplo para debugging
                 if (data.rows && data.rows.length > 0) {
