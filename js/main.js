@@ -880,6 +880,13 @@ function handlePurchase(amount) {
 // ============================================
 // MODAL DE COMPRA
 // ============================================
+// Variables globales para la selección de tickets
+let selectedTickets = new Set();
+let requiredTicketAmount = 2;
+let occupiedTicketsSet = new Set();
+let currentPage = 1;
+const TICKETS_PER_PAGE = 100;
+
 async function openPurchaseModal(amount) {
     const modal = document.getElementById('purchase-modal');
     const ticketAmount = document.getElementById('modal-ticket-amount');
@@ -891,12 +898,21 @@ async function openPurchaseModal(amount) {
     ticketAmount.textContent = amount;
     totalDisplay.textContent = `${total}€`;
     
+    // Establecer la cantidad requerida
+    requiredTicketAmount = amount;
+    document.getElementById('required-amount').textContent = amount;
+    document.getElementById('required-amount-text').textContent = amount;
+    
+    // Limpiar selección previa
+    selectedTickets.clear();
+    currentPage = 1;
+    
     // Limpiar campos del formulario
     document.getElementById('customer-name').value = '';
     document.getElementById('customer-lastname').value = '';
     document.getElementById('customer-phone').value = '';
     
-    // Cargar y poblar el select de números de tickets
+    // Cargar y poblar la lista de números de tickets
     await loadTicketNumbers();
     
     // Mostrar modal
@@ -905,15 +921,14 @@ async function openPurchaseModal(amount) {
 }
 
 /**
- * Carga los números de tickets desde Google Sheets y pobla el select
+ * Carga los números de tickets desde Google Sheets y crea la lista paginada
  */
 async function loadTicketNumbers() {
-    const select = document.getElementById('ticket-number');
-    if (!select) return;
+    const grid = document.getElementById('ticket-numbers-grid');
+    if (!grid) return;
 
     // Mostrar estado de carga
-    select.innerHTML = '<option value="">Cargando números disponibles...</option>';
-    select.disabled = true;
+    grid.innerHTML = '<div class="col-span-10 text-center text-ceramic-600 py-8">Cargando números disponibles...</div>';
 
     try {
         const googleSheets = new GoogleSheetsReader(
@@ -932,39 +947,205 @@ async function loadTicketNumbers() {
         
         // Obtener números ocupados
         const occupiedTickets = googleSheets.getOccupiedTickets(data);
-        const occupiedSet = new Set(occupiedTickets);
+        occupiedTicketsSet = new Set(occupiedTickets);
 
-        // Limpiar el select
-        select.innerHTML = '<option value="">Selecciona un número de ticket</option>';
-
-        // Poblar con todos los números del 0 al 999
-        for (let i = 0; i <= 999; i++) {
-            const option = document.createElement('option');
-            const paddedNumber = String(i).padStart(3, '0');
-            option.value = i;
-            option.textContent = `Ticket #${paddedNumber}`;
-            
-            if (occupiedSet.has(i)) {
-                option.disabled = true;
-                option.classList.add('ticket-occupied');
-            }
-            
-            select.appendChild(option);
-        }
-
-        select.disabled = false;
+        // Renderizar la primera página
+        renderTicketNumbers();
+        
+        // Inicializar paginación
+        initPagination();
+        
+        // Actualizar contador
+        updateSelectedCount();
     } catch (error) {
         console.error('Error al cargar números de tickets:', error);
-        select.innerHTML = '<option value="">Error al cargar números. Intenta de nuevo.</option>';
-        select.disabled = false;
+        grid.innerHTML = '<div class="col-span-10 text-center text-red-600 py-8">Error al cargar números. Intenta de nuevo.</div>';
     }
 }
+
+/**
+ * Renderiza los números de tickets en la página actual
+ */
+function renderTicketNumbers() {
+    const grid = document.getElementById('ticket-numbers-grid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+
+    const startNumber = (currentPage - 1) * TICKETS_PER_PAGE;
+    const endNumber = Math.min(startNumber + TICKETS_PER_PAGE - 1, 999);
+
+    for (let i = startNumber; i <= endNumber; i++) {
+        const ticketButton = document.createElement('button');
+        const paddedNumber = String(i).padStart(3, '0');
+        const isOccupied = occupiedTicketsSet.has(i);
+        const isSelected = selectedTickets.has(i);
+        const isDisabled = isOccupied || (selectedTickets.size >= requiredTicketAmount && !isSelected);
+
+        ticketButton.type = 'button';
+        ticketButton.className = `ticket-number-btn px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+            isOccupied 
+                ? 'bg-ceramic-100 text-ceramic-400 cursor-not-allowed opacity-60' 
+                : isSelected
+                ? 'bg-ceramic-800 text-white shadow-md transform scale-105'
+                : isDisabled
+                ? 'bg-ceramic-50 text-ceramic-400 cursor-not-allowed opacity-50'
+                : 'bg-white text-ceramic-700 border-2 border-ceramic-300 hover:border-ceramic-500 hover:bg-ceramic-50 cursor-pointer'
+        }`;
+        
+        ticketButton.textContent = paddedNumber;
+        ticketButton.dataset.ticketNumber = i;
+        
+        if (!isOccupied && !isDisabled) {
+            ticketButton.addEventListener('click', () => toggleTicketSelection(i));
+        }
+        
+        grid.appendChild(ticketButton);
+    }
+}
+
+/**
+ * Alterna la selección de un ticket
+ */
+function toggleTicketSelection(ticketNumber) {
+    if (selectedTickets.has(ticketNumber)) {
+        selectedTickets.delete(ticketNumber);
+    } else {
+        if (selectedTickets.size < requiredTicketAmount) {
+            selectedTickets.add(ticketNumber);
+        } else {
+            return; // Ya se alcanzó el límite
+        }
+    }
+    
+    // Re-renderizar la página actual para actualizar los estilos
+    renderTicketNumbers();
+    updateSelectedCount();
+    updateSelectedTicketsDisplay();
+}
+
+/**
+ * Inicializa los controles de paginación
+ */
+function initPagination() {
+    const totalPages = Math.ceil(1000 / TICKETS_PER_PAGE);
+    document.getElementById('total-pages').textContent = totalPages;
+    
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+    
+    prevBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderTicketNumbers();
+            updatePaginationButtons();
+        }
+    });
+    
+    nextBtn.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderTicketNumbers();
+            updatePaginationButtons();
+        }
+    });
+    
+    updatePaginationButtons();
+}
+
+/**
+ * Actualiza el estado de los botones de paginación
+ */
+function updatePaginationButtons() {
+    const totalPages = Math.ceil(1000 / TICKETS_PER_PAGE);
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+    const currentPageSpan = document.getElementById('current-page');
+    
+    currentPageSpan.textContent = currentPage;
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = currentPage === totalPages;
+}
+
+/**
+ * Actualiza el contador de tickets seleccionados
+ */
+function updateSelectedCount() {
+    const selectedAmount = document.getElementById('selected-amount');
+    const requiredAmount = document.getElementById('required-amount');
+    const selectedCount = document.getElementById('selected-count');
+    
+    if (selectedAmount) selectedAmount.textContent = selectedTickets.size;
+    if (requiredAmount) requiredAmount.textContent = requiredTicketAmount;
+    
+    // Cambiar color según el estado
+    if (selectedCount) {
+        if (selectedTickets.size === requiredTicketAmount) {
+            selectedCount.classList.remove('text-ceramic-600');
+            selectedCount.classList.add('text-green-600');
+        } else {
+            selectedCount.classList.remove('text-green-600');
+            selectedCount.classList.add('text-ceramic-600');
+        }
+    }
+}
+
+/**
+ * Actualiza la visualización de tickets seleccionados
+ */
+function updateSelectedTicketsDisplay() {
+    const display = document.getElementById('selected-tickets-display');
+    const list = document.getElementById('selected-tickets-list');
+    
+    if (!display || !list) return;
+    
+    if (selectedTickets.size === 0) {
+        display.classList.add('hidden');
+        return;
+    }
+    
+    display.classList.remove('hidden');
+    list.innerHTML = '';
+    
+    const sortedTickets = Array.from(selectedTickets).sort((a, b) => a - b);
+    
+    sortedTickets.forEach(ticketNumber => {
+        const badge = document.createElement('span');
+        const paddedNumber = String(ticketNumber).padStart(3, '0');
+        badge.className = 'inline-flex items-center gap-1 px-3 py-1 bg-ceramic-800 text-white rounded-full text-xs font-medium';
+        badge.innerHTML = `#${paddedNumber} <button type="button" class="ml-1 hover:text-ceramic-200" onclick="removeTicket(${ticketNumber})">×</button>`;
+        list.appendChild(badge);
+    });
+}
+
+/**
+ * Elimina un ticket de la selección (llamado desde el botón ×)
+ */
+function removeTicket(ticketNumber) {
+    selectedTickets.delete(ticketNumber);
+    renderTicketNumbers();
+    updateSelectedCount();
+    updateSelectedTicketsDisplay();
+}
+
+// Hacer la función accesible globalmente para los botones de eliminar
+window.removeTicket = removeTicket;
 
 function closePurchaseModal() {
     const modal = document.getElementById('purchase-modal');
     if (modal) {
         modal.classList.add('hidden');
         document.body.style.overflow = '';
+        
+        // Limpiar selección
+        selectedTickets.clear();
+        currentPage = 1;
+        
+        // Limpiar display de seleccionados
+        const display = document.getElementById('selected-tickets-display');
+        if (display) {
+            display.classList.add('hidden');
+        }
     }
 }
 
@@ -993,13 +1174,18 @@ function initPurchaseModal() {
             const name = document.getElementById('customer-name').value.trim();
             const lastname = document.getElementById('customer-lastname').value.trim();
             const phone = document.getElementById('customer-phone').value.trim();
-            const ticketNumber = document.getElementById('ticket-number').value;
             const ticketAmount = document.getElementById('modal-ticket-amount').textContent;
             const total = document.getElementById('modal-total').textContent;
             
             // Validar campos
-            if (!name || !lastname || !phone || !ticketNumber) {
+            if (!name || !lastname || !phone) {
                 alert('Por favor, completa todos los campos obligatorios.');
+                return;
+            }
+            
+            // Validar que se hayan seleccionado todos los tickets requeridos
+            if (selectedTickets.size !== requiredTicketAmount) {
+                alert(`Por favor, selecciona exactamente ${requiredTicketAmount} número(s) de ticket.`);
                 return;
             }
             
@@ -1010,7 +1196,7 @@ function initPurchaseModal() {
             }
             
             // Generar y abrir link de WhatsApp
-            generateWhatsAppLink(name, lastname, phone, ticketAmount, total, ticketNumber);
+            generateWhatsAppLink(name, lastname, phone, ticketAmount, total, Array.from(selectedTickets));
         });
     }
     
@@ -1025,13 +1211,16 @@ function initPurchaseModal() {
 // ============================================
 // GENERAR LINK DE WHATSAPP
 // ============================================
-function generateWhatsAppLink(name, lastname, phone, ticketAmount, total, ticketNumber) {
-    const paddedTicketNumber = String(ticketNumber).padStart(3, '0');
+function generateWhatsAppLink(name, lastname, phone, ticketAmount, total, ticketNumbers) {
+    // Ordenar los números y formatearlos
+    const sortedNumbers = ticketNumbers.sort((a, b) => a - b);
+    const formattedNumbers = sortedNumbers.map(num => `#${String(num).padStart(3, '0')}`).join(', ');
+    
     const message = `¡Hola! Me interesa participar en el sorteo de la Yamaha NMAX.
 
 📋 *Información de la compra:*
 • Cantidad de tickets: ${ticketAmount}
-• Número de ticket seleccionado: #${paddedTicketNumber}
+• Números de tickets seleccionados: ${formattedNumbers}
 • Total a pagar: ${total}
 
 👤 *Mis datos:*
