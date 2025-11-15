@@ -27,7 +27,10 @@ const CONFIG = {
             // Rango específico a leer (columna D desde fila 2 hasta 1002 - columna de estado)
             range: 'D2:D1002',
             // Rango para obtener números de tickets y estados (columna A = número, columna D = estado)
-            ticketsRange: 'A2:D1002'
+            ticketsRange: 'A2:D1002',
+            // URL del Google Apps Script para actualizar tickets (opcional, pero recomendado)
+            // Obtén esta URL siguiendo las instrucciones en GOOGLE_APPS_SCRIPT_UPDATE.md
+            updateScriptUrl: 'https://script.google.com/macros/s/AKfycbyZFnHjKHCl03l_VBQm-cyPSF2cx96m2fQYGjKLYM9yDCiQKlCGdG3t6dl5Qgg8TtGc9g/exec'
         }
     }
 };
@@ -1258,10 +1261,85 @@ function initPurchaseModal() {
 // ============================================
 /**
  * Actualiza el estado de los tickets en Google Sheets de "disponible" a "reservado"
+ * Usa Google Apps Script si está configurado, sino intenta con la API directa
  * @param {Array<number>} ticketNumbers - Array de números de tickets a actualizar
  * @returns {Promise<boolean>} - true si se actualizó correctamente, false si hubo error
  */
 async function updateTicketsStatus(ticketNumbers) {
+    try {
+        const updateScriptUrl = CONFIG.googleSheets.options?.updateScriptUrl;
+        
+        // Priorizar Google Apps Script si está configurado
+        if (updateScriptUrl) {
+            return await updateTicketsViaAppsScript(ticketNumbers, updateScriptUrl);
+        }
+        
+        // Fallback: intentar con API directa
+        return await updateTicketsViaAPI(ticketNumbers);
+    } catch (error) {
+        console.error('❌ Error al actualizar estado de tickets:', error);
+        return false;
+    }
+}
+
+/**
+ * Actualiza tickets usando Google Apps Script
+ * @param {Array<number>} ticketNumbers - Array de números de tickets
+ * @param {string} scriptUrl - URL del script desplegado
+ * @returns {Promise<boolean>}
+ */
+async function updateTicketsViaAppsScript(ticketNumbers, scriptUrl) {
+    try {
+        console.log('🔄 Actualizando tickets vía Google Apps Script...');
+        
+        const response = await fetch(scriptUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ticketNumbers: ticketNumbers,
+                status: 'reservado'
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log(`✅ Tickets actualizados: ${result.updated} de ${result.total}`);
+            if (result.errors && result.errors.length > 0) {
+                console.warn('⚠️ Algunos tickets no se pudieron actualizar:', result.errors);
+            }
+            
+            // Invalidar caché y recargar datos
+            invalidateCacheAndReload();
+            
+            // Actualizar localmente
+            ticketNumbers.forEach(num => {
+                occupiedTicketsSet.add(num);
+            });
+            
+            return true;
+        } else {
+            console.error('❌ Error en la respuesta del script:', result.error);
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Error al actualizar vía Apps Script:', error);
+        return false;
+    }
+}
+
+/**
+ * Actualiza tickets usando la API directa de Google Sheets (requiere permisos de escritura)
+ * @param {Array<number>} ticketNumbers - Array de números de tickets
+ * @returns {Promise<boolean>}
+ */
+async function updateTicketsViaAPI(ticketNumbers) {
     try {
         const sheetId = CONFIG.googleSheets.sheetId;
         const sheetName = CONFIG.googleSheets.sheetName || 'Hoja 1';
@@ -1272,14 +1350,12 @@ async function updateTicketsStatus(ticketNumbers) {
             return false;
         }
 
-        // Preparar las actualizaciones: cada ticket está en la fila (número + 2) porque:
-        // - Fila 1: Headers
-        // - Fila 2: Ticket 000 (índice 0)
-        // - Fila 3: Ticket 001 (índice 1)
-        // etc.
+        console.log('🔄 Intentando actualizar vía API directa...');
+
+        // Preparar las actualizaciones: cada ticket está en la fila (número + 2)
         const updates = ticketNumbers.map(ticketNumber => {
-            const rowNumber = ticketNumber + 2; // +2 porque la fila 1 es header y empezamos desde fila 2
-            const range = `${sheetName}!D${rowNumber}`; // Columna D es el estado
+            const rowNumber = ticketNumber + 2;
+            const range = `${sheetName}!D${rowNumber}`;
             
             return {
                 range: range,
@@ -1307,7 +1383,7 @@ async function updateTicketsStatus(ticketNumbers) {
             
             // Si el error es de permisos, sugerir usar Google Apps Script
             if (response.status === 403 || response.status === 401) {
-                console.warn('⚠️ La API Key no tiene permisos de escritura. Considera usar Google Apps Script.');
+                console.warn('⚠️ La API Key no tiene permisos de escritura. Configura Google Apps Script (ver GOOGLE_APPS_SCRIPT_UPDATE.md)');
             }
             
             return false;
@@ -1316,27 +1392,34 @@ async function updateTicketsStatus(ticketNumbers) {
         const result = await response.json();
         console.log('✅ Tickets actualizados en Google Sheets:', ticketNumbers);
         
-        // Invalidar caché para que se recarguen los datos
-        if (window.ticketsCounter && window.ticketsCounter.googleSheets) {
-            window.ticketsCounter.googleSheets.cache = null;
-            window.ticketsCounter.googleSheets.cacheTime = 0;
-            // Recargar datos después de un breve delay
-            setTimeout(() => {
-                if (window.ticketsCounter && window.ticketsCounter.loadFromGoogleSheets) {
-                    window.ticketsCounter.loadFromGoogleSheets();
-                }
-            }, 1000);
-        }
+        // Invalidar caché y recargar datos
+        invalidateCacheAndReload();
         
-        // Actualizar también el set de tickets ocupados localmente
+        // Actualizar localmente
         ticketNumbers.forEach(num => {
             occupiedTicketsSet.add(num);
         });
         
         return true;
     } catch (error) {
-        console.error('❌ Error al actualizar estado de tickets:', error);
+        console.error('❌ Error al actualizar vía API:', error);
         return false;
+    }
+}
+
+/**
+ * Invalida el caché y recarga los datos del contador
+ */
+function invalidateCacheAndReload() {
+    if (window.ticketsCounter && window.ticketsCounter.googleSheets) {
+        window.ticketsCounter.googleSheets.cache = null;
+        window.ticketsCounter.googleSheets.cacheTime = 0;
+        // Recargar datos después de un breve delay
+        setTimeout(() => {
+            if (window.ticketsCounter && window.ticketsCounter.loadFromGoogleSheets) {
+                window.ticketsCounter.loadFromGoogleSheets();
+            }
+        }, 1000);
     }
 }
 
