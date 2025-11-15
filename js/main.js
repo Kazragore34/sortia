@@ -428,17 +428,17 @@ class GoogleSheetsReader {
 
         // Priorizar values (formato API directo) si está disponible
         if (data.values && data.values.length > 0) {
-            // Asumimos que la primera columna (índice 0) es el número y la cuarta (índice 3) es el estado
+            // Estructura: A=numero (vacía), B=nombre (contiene el número de ticket), C=telefono, D=estado
             // Si el rango es A2:D1002, no hay header, así que usamos directamente los valores
             for (let i = 0; i < data.values.length; i++) {
                 const row = data.values[i];
                 if (row && row.length >= 4) {
-                    // Usar Number() en lugar de parseInt() || null para manejar correctamente el 0
-                    const ticketNumberRaw = row[0];
+                    // Columna B (índice 1) contiene el número de ticket, columna D (índice 3) contiene el estado
+                    const ticketNumberRaw = row[1]; // Columna B (nombre)
                     const ticketNumber = ticketNumberRaw !== null && ticketNumberRaw !== undefined && ticketNumberRaw !== '' 
                         ? Number(ticketNumberRaw) 
                         : null;
-                    const status = (row[3] || '').trim();
+                    const status = (row[3] || '').trim(); // Columna D (estado)
                     // Verificar que sea un número válido (incluyendo 0)
                     if (ticketNumber !== null && !isNaN(ticketNumber) && ticketNumber >= 0 && ticketNumber <= 999) {
                         ticketsMap.set(ticketNumber, status);
@@ -455,11 +455,11 @@ class GoogleSheetsReader {
         } else if (data.rows && data.headers) {
             // Si data tiene rows (formato parseado), buscar columnas por nombre
             const numberColumn = data.headers.find(h => 
-                ['Número', 'Numero', 'Ticket', 'Número Ticket', 'id_tickets'].includes(h)
-            ) || data.headers[0];
+                ['Número', 'Numero', 'Ticket', 'Número Ticket', 'id_tickets', 'nombre', 'Nombre'].includes(h)
+            ) || data.headers[1]; // Por defecto columna B (índice 1) si no se encuentra
             const statusColumn = data.headers.find(h => 
                 ['Estado', 'Status', 'estado', 'status'].includes(h)
-            ) || data.headers[3];
+            ) || data.headers[3]; // Por defecto columna D (índice 3)
 
             data.rows.forEach(row => {
                 // Usar Number() en lugar de parseInt() || null para manejar correctamente el 0
@@ -1263,18 +1263,21 @@ function initPurchaseModal() {
  * Actualiza el estado de los tickets en Google Sheets de "disponible" a "reservado"
  * Usa Google Apps Script si está configurado, sino intenta con la API directa
  * @param {Array<number>} ticketNumbers - Array de números de tickets a actualizar
+ * @param {string} customerName - Nombre completo del cliente (nombre + apellido)
+ * @param {string} customerPhone - Teléfono del cliente
+ * @param {string} reservationDate - Fecha de la reserva
  * @returns {Promise<boolean>} - true si se actualizó correctamente, false si hubo error
  */
-async function updateTicketsStatus(ticketNumbers) {
+async function updateTicketsStatus(ticketNumbers, customerName = '', customerPhone = '', reservationDate = '') {
     try {
         const updateScriptUrl = CONFIG.googleSheets.options?.updateScriptUrl;
         
         // Priorizar Google Apps Script si está configurado
         if (updateScriptUrl) {
-            return await updateTicketsViaAppsScript(ticketNumbers, updateScriptUrl);
+            return await updateTicketsViaAppsScript(ticketNumbers, updateScriptUrl, customerName, customerPhone, reservationDate);
         }
         
-        // Fallback: intentar con API directa
+        // Fallback: intentar con API directa (solo actualiza estado, no nombre/teléfono/fecha)
         return await updateTicketsViaAPI(ticketNumbers);
     } catch (error) {
         console.error('❌ Error al actualizar estado de tickets:', error);
@@ -1287,9 +1290,12 @@ async function updateTicketsStatus(ticketNumbers) {
  * Usa un formulario oculto con iframe para evitar problemas de CORS
  * @param {Array<number>} ticketNumbers - Array de números de tickets
  * @param {string} scriptUrl - URL del script desplegado
+ * @param {string} customerName - Nombre completo del cliente
+ * @param {string} customerPhone - Teléfono del cliente
+ * @param {string} reservationDate - Fecha de la reserva
  * @returns {Promise<boolean>}
  */
-async function updateTicketsViaAppsScript(ticketNumbers, scriptUrl) {
+async function updateTicketsViaAppsScript(ticketNumbers, scriptUrl, customerName = '', customerPhone = '', reservationDate = '') {
     return new Promise((resolve) => {
         try {
             console.log('🔄 Actualizando tickets vía Google Apps Script...');
@@ -1313,7 +1319,10 @@ async function updateTicketsViaAppsScript(ticketNumbers, scriptUrl) {
             dataInput.name = 'data';
             dataInput.value = JSON.stringify({
                 ticketNumbers: ticketNumbers,
-                status: 'reservado'
+                status: 'reservado',
+                customerName: customerName,
+                customerPhone: customerPhone,
+                reservationDate: reservationDate
             });
             form.appendChild(dataInput);
             
@@ -1511,6 +1520,22 @@ async function generateWhatsAppLink(name, lastname, phone, ticketAmount, total, 
         ticketsList = sortedNumbers.map(num => `• #${String(num).padStart(3, '0')}`).join('\n');
     }
     
+    // Preparar datos del cliente
+    const customerName = `${name} ${lastname}`.trim();
+    const customerPhone = phone;
+    
+    // Crear fecha en formato dd/MM/yyyy HH:mm
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const reservationDate = `${day}/${month}/${year} ${hours}:${minutes}`;
+    
+    // Actualizar Google Sheets con los datos del cliente
+    await updateTicketsStatus(sortedNumbers, customerName, customerPhone, reservationDate);
+    
     const message = `¡Hola! Me interesa participar en el sorteo de la Yamaha NMAX.
 
 📋 *Información de la compra:*
@@ -1525,16 +1550,6 @@ ${ticketsList}
 • Teléfono: ${phone}
 
 Por favor, confírmame la disponibilidad de estos números y cómo proceder con el pago. ¡Gracias!`;
-
-    // Actualizar estado en Google Sheets antes de enviar
-    console.log('🔄 Actualizando estado de tickets en Google Sheets...');
-    const updateSuccess = await updateTicketsStatus(sortedNumbers);
-    
-    if (updateSuccess) {
-        console.log('✅ Estados actualizados correctamente');
-    } else {
-        console.warn('⚠️ No se pudieron actualizar los estados automáticamente. Los tickets se marcarán manualmente.');
-    }
 
     // Codificar el mensaje para URL
     const encodedMessage = encodeURIComponent(message);
