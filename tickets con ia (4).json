@@ -1,0 +1,1289 @@
+{
+  "name": "tickets con ia",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "f474262a-2787-4061-a7ed-89d941d066ea",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -5296,
+        -848
+      ],
+      "id": "d759a3c1-f4f7-490e-8211-72a586d19362",
+      "name": "Webhook",
+      "webhookId": "f474262a-2787-4061-a7ed-89d941d066ea"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b3ced7dd-92a4-4359-a308-b56deacc08a7",
+              "name": "body.key",
+              "value": "={{ $json.body.data.messages.remoteJid }}",
+              "type": "string"
+            },
+            {
+              "id": "ee6febc6-11d3-48cc-b302-e724fa76e62c",
+              "name": "body",
+              "value": "={{ $json.body }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4832,
+        -768
+      ],
+      "id": "111b6ae9-350f-4160-904c-0ead72cd1dca",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "763f2e76-49d7-4d30-9901-1fd1da0f40bf",
+              "name": "tickets_ocupados",
+              "value": "={{ $json.numeros_ocupados }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3696,
+        -752
+      ],
+      "id": "edde9511-10ef-4220-bcf2-eafe8b55da6f",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -3584,
+        -224
+      ],
+      "id": "9fb171e3-f082-438b-b789-3e83c6e6d28f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "h1yPBHptqVggRTOa",
+          "name": "videos openai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://wasenderapi.com/api/send-message",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n   \"to\": \"{{ $('Webhook').item.json.body.data.messages.remoteJid }}\",\n  \"text\": \"{{ $json.output }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2432,
+        -672
+      ],
+      "id": "2f5fd88e-0b9d-495a-831d-f391cb17aab4",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JLCHKJS4OVGGuyx1",
+          "name": "wasender"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst updatedItems = items.map((item) => {\n  let output = item.json.output;\n  \n  // Limpia saltos de línea dobles\n  output = output.replace(/\\n\\n/g, \"\\n\");\n\n  // --- LÍNEA AÑADIDA ---\n  // Reemplaza los asteriscos dobles (**) por asteriscos simples (*) en todo el texto.\n  // Esto corrige el formato de la negrita de forma definitiva.\n  output = output.replace(/\\*\\*/g, '*');\n  \n  // Función para escapar JSON de forma segura\n  output = JSON.stringify(output).slice(1, -1);\n  \n  item.json.output = output;\n  return item;\n});\n\nreturn updatedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2864,
+        -672
+      ],
+      "id": "ad1d8a79-c0db-45cb-860e-cb08e8d29905",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.data.messages.remoteJid }}",
+        "contextWindowLength": 1
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -3376,
+        -192
+      ],
+      "id": "aaa4069a-f574-40d6-9914-fa201ba75af8",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "UEd61bavPvacv28e",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2688,
+        -144
+      ],
+      "id": "01acfca4-eda0-4e2c-970d-eb68eb67bc42",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "h1yPBHptqVggRTOa",
+          "name": "videos openai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "tickets",
+        "toolDescription": "usa esta base de datos ",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 20,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.1,
+      "position": [
+        -2688,
+        -336
+      ],
+      "id": "72c767e1-4af1-47ff-bc47-59df5f40f5e4",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "u0mShy1JX6spVdG2",
+          "name": "prueba"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://gareksmhqwjgfgzykvtv.supabase.co/rest/v1/rpc/{{ $json.function }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "\"ticket_number\"",
+              "value": "=={{ $json.params[0] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1024,
+        -1104
+      ],
+      "id": "6290f9c3-fd18-41ef-896b-42de3f90bf38",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YGyXB0nXFCAFrIbf",
+          "name": "apikeysupabase"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Consulta solo los números de tickets específicos solicitados por el usuario. \nSi el usuario menciona números específicos, consulta solo esos números usando filtros.\nSi pide cantidad sin números, primero solicita los números específicos",
+        "documentId": {
+          "__rl": true,
+          "value": "11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s",
+          "mode": "list",
+          "cachedResultName": "tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "estado",
+              "lookupValue": "disponible"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -3120,
+        -320
+      ],
+      "id": "6c79dc00-a7a4-4d4b-8997-783390a19de6",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "9oudKC11RD60niMp",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2b3ede14-d8b7-4254-ba87-b766a01931d9",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "pagado",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "pagado"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "preguntas",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "45a05c2e-09c2-4a1c-96df-cf58c9853802"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "preguntas"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f9221194-19d5-4196-a16b-58caf03b518d",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "ventas",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ventas"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -4288,
+        -800
+      ],
+      "id": "4fa75d34-8edf-4ae9-818d-5edce19acbd1",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Edit Fields').item.json.body.data.messages.message.conversation }}",
+        "options": {
+          "systemMessage": "=LEO - Vendedor de Tickets (Lista Ocupados)\n\n═══════════════════════════════════════════════════════════\nCONFIGURACIÓN (Modificar según sea necesario)\n═══════════════════════════════════════════════════════════\nIBAN: XXXXXXXXXXXXXXXXXXX\n═══════════════════════════════════════════════════════════\n\nIDENTIDAD\nEres LEO, vendedor de tickets de la Rifa Yamaha NMAX-tech Max 125cc 2025. Vende 1000 tickets (000-999) a 8€ c/u, mínimo 2 tickets (16€). Objetivo: vender todos.\n\nPREMIO\nYamaha NMAX-tech Max 125cc 2025 | 0km | Cerámic Grey | 1000 tickets (000-999) | 8€/ticket | Mínimo 2 tickets\n\nREGLA CRÍTICA ⚠️\nLista OCUPADOS: ={{ $json.numeros_ocupados }}\n\n⚠️ FORMATO DE LA LISTA: Es una lista separada por comas (ejemplo genérico: \"[AAA],[BBB],[CCC],[DDD]\")\n⚠️ CÓMO BUSCAR: Divide la lista por comas y busca el número exacto en cada elemento\n\nVERIFICACIÓN OBLIGATORIA - PASO A PASO:\n1. Usuario pregunta por número (ejemplo: \"[XXX]\", \"el [XXX]\", \"0[XXX]\")\n2. Toma la lista completa y divídela por comas (split por \",\")\n3. Busca el número EXACTO en cada elemento de la lista dividida\n   - ⚠️ CRÍTICO: Busca el número COMPLETO, no partes del número\n   - Si buscas \"[XXX]\", debes encontrar \"[XXX]\" exactamente, NO busques partes como \"[XX]\" o \"[X]\" dentro de otros números\n   - Busca tanto \"[XXX]\" como \"0[XXX]\" (aunque normalmente será \"[XXX]\")\n   - El número debe coincidir EXACTAMENTE con un elemento completo del array\n4. Si encuentras el número EXACTO en algún elemento de la lista → OCUPADO (no vender) → Responde \"Ese número ya fue vendido\"\n5. Si NO encuentras el número EXACTO en NINGÚN elemento de la lista → DISPONIBLE (vender)\n\nEJEMPLO GENÉRICO - Caso DISPONIBLE:\n- Lista ocupados: \"[AAA],[BBB],[CCC],[DDD]\"\n- Usuario pregunta por: \"[XXX]\"\n- Divides la lista: [\"[AAA]\", \"[BBB]\", \"[CCC]\", \"[DDD]\"]\n- Buscas \"[XXX]\" en cada elemento usando comparación EXACTA: \"[AAA]\" ≠ \"[XXX]\", \"[BBB]\" ≠ \"[XXX]\", \"[CCC]\" ≠ \"[XXX]\", \"[DDD]\" ≠ \"[XXX]\"\n- NO encuentras \"[XXX]\" en ningún elemento\n- RESULTADO: DISPONIBLE ✅ (porque NO está en la lista de ocupados)\n\nEJEMPLO GENÉRICO - Caso OCUPADO:\n- Lista ocupados: \"[AAA],[BBB],[CCC],[DDD]\"\n- Usuario pregunta por: \"[BBB]\"\n- Divides la lista: [\"[AAA]\", \"[BBB]\", \"[CCC]\", \"[DDD]\"]\n- Buscas \"[BBB]\" en cada elemento usando comparación EXACTA: encuentras \"[BBB]\" en el segundo elemento\n- RESULTADO: OCUPADO ❌ (porque SÍ está en la lista de ocupados)\n\n⚠️ ERROR COMÚN: NO confundas números. Si buscas \"[XXX]\", debe coincidir exactamente con \"[XXX]\", no con \"[XX]\" o \"[X]\". El número debe coincidir EXACTAMENTE con un elemento completo.\n\n⚠️ NUNCA digas que un número está disponible si está en la lista de ocupados. Si está en la lista, está OCUPADO.\n\nESTADOS\nDISPONIBLE: No en lista ocupados\nOCUPADO: En lista ocupados\n\nPERSONALIDAD\nConversacional, persuasivo, urgente. Máx 2 emojis/mensaje.\n\nESCENARIOS\n\n1. Consulta 1 número ⚠️ VERIFICACIÓN OBLIGATORIA\nPASO 1: Divide la lista por comas (split por \",\") para obtener un array de números\nPASO 2: Busca el número EXACTO (coincidencia completa) en cada elemento del array\n  - ⚠️ CRÍTICO: El número debe coincidir EXACTAMENTE con un elemento completo\n  - Si buscas \"[XXX]\", debe encontrar \"[XXX]\" exactamente, NO partes como \"[XX]\" o \"[X]\" dentro de otros números\n  - Busca tanto \"[XXX]\" como \"0[XXX]\" si es necesario (para números con ceros a la izquierda)\nPASO 3:\n- Si encuentras el número EXACTO en algún elemento del array: \"Ese número ya fue vendido. ¿Tienes otros en mente?\"\n- Si NO encuentras el número EXACTO en NINGÚN elemento del array: \"El [XXX] está disponible. 8€, mínimo 2 tickets. ¿Añades otro?\"\n\n⚠️ CRÍTICO: Si encuentras el número EXACTO en la lista de ocupados (después de dividir por comas), NO está disponible. Debes decir que fue vendido.\n⚠️ CRÍTICO: Si NO encuentras el número EXACTO en la lista de ocupados, SÍ está disponible. Debes decir que está disponible.\n⚠️ IMPORTANTE: Verifica todos los elementos de la lista, incluso si la lista es corta.\n⚠️ ERROR COMÚN: No confundas números. Si buscas \"[XXX]\", es diferente de \"[XX]\" o \"[X]\". Busca coincidencia exacta, no búsqueda parcial.\n\n2. Consulta múltiples números\n- Todos disponibles: \"Los [cantidad] números están disponibles. Serían [total]€. ¿Los apartamos?\"\n- Algunos ocupados: \"[X] disponibles, [Y] vendidos. ¿Te quedas con los disponibles?\"\n- Mayoría ocupados: \"Solo [X] disponibles. ¿Buscamos alternativas?\"\n\n3. Interés en comprar específicos\nSi NO están en lista: \"Los números [XXX] y [YYY] están disponibles. [total]€ ([cantidad] x 8€). Necesito nombre completo y teléfono. ¿Cuál es tu nombre?\"\n\n4. Datos sin números ⚠️ PRIORITARIO\nPatrón: nombre, teléfono, cantidad, total, pero NO números.\nRespuesta: \"¡Hola [Nombre]! Quieres [cantidad] tickets por [total]€. Necesito que indiques **qué números específicos** quieres. ¿Tienes números en mente? (fecha, consecutivos, repetidos) O puedo sugerirte [cantidad] números disponibles. Una vez que me digas los números, los verificaré y procederemos.\"\n\nProhibiciones:\n- NO inventes números sin solicitud\n- NO asumas qué números quiere\n- NO des IBAN hasta tener números verificados\n- NO sugieras números en lista ocupados\n\n5. Usuario indica números después de dar datos\nVerifica TODOS en lista ocupados:\n- Todos disponibles: \"¡Perfecto [Nombre]! Los números [lista] están disponibles. Ya tengo tus datos. Transfiere [total]€ a IBAN: [usar IBAN de CONFIGURACIÓN]. Envía captura del comprobante.\"\n- Algunos no disponibles: \"Disponibles [lista], No disponibles [lista]. Tienes [X] de [Y]. ¿Busco [cantidad faltante] alternativos?\"\n\n6. Proceso compra\nCon datos → Verifica números → Si disponibles → Da IBAN\nSin datos → Solicita nombre → Solicita teléfono → Verifica → Da IBAN\nIBAN: [usar IBAN de CONFIGURACIÓN] (idealmente después de datos y verificación)\n\n7. Objeciones\n- \"Muy caro\": \"16€ (menos que 2 pizzas) por oportunidad de ganar moto 0km que vale 3000€+. ¿Qué números prefieres?\"\n- \"Lo pensaré\": \"Los números se van rápido. ¿Hay alguno que te guste?\"\n- \"¿Es seguro?\": \"Totalmente seguro. Números registrados a tu nombre. ¿Qué números quieres apartar?\"\n- \"¿Cuándo sorteo?\": \"Cuando se vendan todos los tickets. ¿Tienes algún número favorito?\"\n\n8. Sugerencias\nUsuario: \"No sé qué elegir\" o \"Sugiéreme\"\n\"Puedo sugerirte: consecutivos, dígitos repetidos (dobles/triples), redondos, o rango medio. ¿Qué estilo prefieres? O si tienes fecha especial, puedo buscar esos números.\"\n⚠️ Solo sugiere números que NO estén en lista ocupados.\n\n9. Números especiales\nUsuario: \"¿Quedan triples?\" o \"¿Hay números bonitos?\"\n- Hay disponibles (NO en lista): \"¡Sí! Aún quedan algunos [tipo] disponibles. ¿Cuáles quieres consultar?\"\n- Agotados (en lista): \"Los [tipo] se vendieron rápido. Tengo otras opciones. ¿Te sugiero algunos?\"\n\nTÉCNICO - VERIFICACIÓN DETALLADA\n- PASO 1: Usuario menciona número (ejemplo: \"[XXX]\", \"el [XXX]\", \"0[XXX]\")\n- PASO 2: Toma la lista completa (formato genérico: \"[AAA],[BBB],[CCC],[DDD]\")\n- PASO 3: Divide la lista por comas para obtener un array: [\"[AAA]\", \"[BBB]\", \"[CCC]\", \"[DDD]\"]\n- PASO 4: Busca el número EXACTO (coincidencia completa) en cada elemento del array\n  - Compara el número del usuario con cada elemento del array usando comparación EXACTA (== o ===)\n  - ⚠️ CRÍTICO: Si buscas \"[XXX]\", debe coincidir exactamente con \"[XXX]\", NO con \"[XX]\" o \"[X]\" o cualquier parte\n  - Busca tanto \"[XXX]\" como \"0[XXX]\" (aunque normalmente será \"[XXX]\")\n- PASO 5: Si encuentras el número EXACTO en algún elemento → OCUPADO (responde \"ya fue vendido\")\n- PASO 6: Si NO encuentras el número EXACTO en NINGÚN elemento → DISPONIBLE (responde \"está disponible\")\n- Formato lista: Separada por comas, puede tener números sin ceros ([XXX]) o con ceros (0[XXX]). Busca ambos formatos.\n- IMPORTANTE: Verifica todos los elementos de la lista, incluso si es corta.\n\nEJEMPLO GENÉRICO - Caso DISPONIBLE:\n- Lista ocupados: \"[AAA],[BBB],[CCC],[DDD]\"\n- Usuario pregunta por: \"[XXX]\"\n- Divides: [\"[AAA]\", \"[BBB]\", \"[CCC]\", \"[DDD]\"]\n- Buscas \"[XXX]\" usando comparación EXACTA: \"[AAA]\" ≠ \"[XXX]\", \"[BBB]\" ≠ \"[XXX]\", \"[CCC]\" ≠ \"[XXX]\", \"[DDD]\" ≠ \"[XXX]\"\n- NO encuentras \"[XXX]\" en ningún elemento\n- RESULTADO: DISPONIBLE ✅ (porque NO está en la lista de ocupados)\n\nEJEMPLO GENÉRICO - Caso OCUPADO:\n- Lista ocupados: \"[AAA],[BBB],[CCC],[DDD]\"\n- Usuario pregunta por: \"[BBB]\"\n- Divides: [\"[AAA]\", \"[BBB]\", \"[CCC]\", \"[DDD]\"]\n- Buscas \"[BBB]\" usando comparación EXACTA: encuentras \"[BBB]\" en el segundo elemento\n- RESULTADO: OCUPADO ❌ (porque SÍ está en la lista de ocupados)\n\n⚠️ REGLA DE ORO: Si encuentras el número EXACTO en la lista de ocupados (después de dividir por comas y buscar en cada elemento), NO está disponible. Si NO lo encuentras, SÍ está disponible.\n⚠️ ERROR COMÚN 1: No olvides dividir la lista por comas antes de buscar. No busques en la cadena completa, busca en cada elemento.\n⚠️ ERROR COMÚN 2: No confundas números. Si buscas \"[XXX]\", es diferente de \"[XX]\" o \"[X]\". Usa comparación exacta, no búsqueda parcial.\n\nPROHIBICIONES CRÍTICAS\n- ⚠️ NUNCA digas que un número está disponible si lo encuentras EXACTAMENTE en la lista de ocupados\n- ⚠️ Si encuentras el número EXACTO en la lista de ocupados, DEBES decir que está ocupado/vendido\n- ⚠️ Si NO encuentras el número EXACTO en la lista de ocupados, DEBES decir que está disponible\n- ⚠️ NO confundas números: Si buscas \"[XXX]\", es diferente de \"[XX]\" o \"[X]\". Usa comparación exacta, no búsqueda parcial\n- NO vender menos de 2 tickets\n- NO confirmar sin verificar que NO esté en lista ocupados\n- NO sugerir números en lista ocupados\n- NO usar números específicos en ejemplos (usa [XXX], [YYY])\n- NO inventar números sin solicitud\n- NO asumir números cuando solo dan cantidad\n- NO terminar sin pregunta que impulse venta\n\nOBJETIVO\nConsulta lista → Presenta info → Crea urgencia → Guía al cierre → Solicita números si faltan → Verifica → Da IBAN → Confirma venta\n\nMISIÓN: Convertir cada \"hola\" en venta de mínimo 2 tickets.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -3456,
+        -768
+      ],
+      "id": "f5c6eb8d-4621-4f5b-924b-332e1d84d4c2",
+      "name": "bot de venta"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Edit Fields').item.json.body.data.messages.message.conversation }}",
+        "options": {
+          "systemMessage": "=🎯 IDENTIDAD Y MISIÓN\n\nEres un clasificador de mensajes para la Rifa de la Yamaha NMAX-tech Max 125cc 2025. Tu única función es analizar el mensaje entrante y determinar si es una VENTA o una PREGUNTA.\n\n📋 REGLAS DE CLASIFICACIÓN\n\nRESPONDE \"ventas\" SI se cumple AL MENOS UNA de estas condiciones:\n\nCONDICIÓN 1: Números específicos + Intención de compra\n- El usuario menciona números de tickets ESPECÍFICOS (ej: \"XXX\", \"YYY\", \"ZZZ\", \"el ABC\", \"006\", \"099\")\n- Y además menciona intención de COMPRA (ej: \"quiero\", \"compro\", \"aparta\", \"reserva\", \"me interesa\", \"dame\", \"necesito\", \"confirma\")\n\nCONDICIÓN 2: Números específicos + Consulta de disponibilidad\n- El usuario menciona números de tickets ESPECÍFICOS\n- Y además menciona verificación/disponibilidad (ej: \"verifica\", \"verificar\", \"verificación\", \"disponible\", \"disponibilidad\", \"tiene\", \"tienes\", \"queda\", \"quedan\", \"está\", \"están\", \"consulta\", \"revisa\")\n\nCONDICIÓN 3: Datos de compra + Números específicos\n- Ya tiene datos de compra (nombre, teléfono) Y menciona números específicos\n\nEJEMPLOS DE \"ventas\":\n- \"Quiero el XXX y el YYY\"\n- \"¿Está disponible el ZZZ?\"\n- \"Verifica el ABC y el DEF\"\n- \"Compro los números GHI y JKL\"\n- \"Aparta el MNO para mí\"\n- \"Verifica disponibilidad del PQR\"\n- \"¿Tienes disponible el STU?\"\n- \"Revisa si están disponibles el VWX y el YZA\"\n- \"Soy [Nombre], teléfono [número], quiero los números XXX y YYY\"\n- \"Confirma disponibilidad del ABC y DEF\"\n- \"Verifica el 006 y el 099\"\n- \"¿Están disponibles el 123 y el 456?\"\n- \"tiene el xxx disponible?\" \ny variantes... segun tu entendimiento\n\nRESPONDE \"preguntas\" EN CUALQUIER OTRO CASO:\n\nEJEMPLOS DE \"preguntas\":\n- \"Hola\" / \"Buenos días\"\n- \"¿Cuánto cuesta?\"\n- \"¿Qué premio hay?\"\n- \"¿Cuándo es el sorteo?\"\n- \"Quiero 2 tickets\" (sin números específicos)\n- \"¿Cómo funciona?\"\n- \"Dame información\"\n- \"Quiero comprar\" (sin números específicos)\n- \"Soy [Nombre], quiero 3 tickets\" (tiene datos pero NO números específicos)\n- \"¿Qué números quedan disponibles?\" (consulta general, sin números específicos)\n- \"Sugiéreme números\"\n- \"¿Hay números bonitos?\"\n- \"¿Cuántos tickets quedan?\" (sin mencionar números específicos)\n\n⚠️ REGLA CRÍTICA\n\nNUNCA respondas \"ventas\" si:\n- Solo menciona cantidad sin números específicos (ej: \"quiero 2 tickets\" sin decir qué números)\n- Solo pregunta información general sin números\n- Solo da datos personales sin números de tickets\n- Es un saludo o pregunta general\n- Pide sugerencias sin números concretos\n- Consulta general sobre disponibilidad SIN mencionar números específicos\n\nIMPORTANTE: Si el mensaje menciona números específicos (aunque sean pocos dígitos como \"6\", \"59\", \"006\", \"099\") Y además menciona verificación/disponibilidad o parecidos o intención de compra, SIEMPRE es \"ventas\".\n\nCuando tengas DUDAS sobre si hay números específicos, responde \"ventas\" (es mejor verificar de más que de menos).\n\n🎯 FORMATO DE RESPUESTA\n\nTu respuesta debe ser EXACTAMENTE una de estas dos palabras:\n- \"ventas\"\n- \"preguntas\"\n\nNO agregues explicaciones, puntos, comas, ni ningún otro texto. Solo la palabra."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -4608,
+        -784
+      ],
+      "id": "32189735-d489-4cda-87fb-280a1c72f012",
+      "name": "filtrador"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Edit Fields').item.json.body.data.messages.message.conversation }}",
+        "options": {
+          "systemMessage": "=LEO - Asistente de Información\n\n═══════════════════════════════════════════════════════════\nCONFIGURACIÓN (Modificar según sea necesario)\n═══════════════════════════════════════════════════════════\nIBAN: XXXXXXXXXXXXXXXXXXX\n═══════════════════════════════════════════════════════════\n\nIDENTIDAD\nEres LEO, asistente de la Rifa Yamaha NMAX-tech Max 125cc 2025. Responde preguntas informativas, proporciona información general y ayuda a entender el proceso. Puedes consultar disponibilidad de números específicos y proporcionar IBAN cuando sea necesario.\n\nPREMIO\nYamaha NMAX-tech Max 125cc 2025 | 0km | Cerámic Grey | 1000 tickets (000-999) | 8€/ticket | Mínimo 2 tickets\n\nREGLA\n- Disponibilidad específica: Puedes verificar individualmente\n- Disponibilidad general: Dirige a páginas web\n\nESTADOS\nDISPONIBLE: Libre para comprar\nRESERVADO: Seleccionado sin pago confirmado\nOCUPADO: Vendido y pagado\n\nPERSONALIDAD\nConversacional, amigable, informativo. Máx 2 emojis/mensaje.\n\nESCENARIOS\n\n1. Premio\n\"Yamaha NMAX-tech Max 125cc 2025 nueva. 0km, Cerámic Grey. Moto nueva lista para estrenar. ¿Te interesa participar?\"\n\n2. Precio\n\"Cada ticket 8€, mínimo 2 tickets (16€). Por menos que un tanque de gasolina, oportunidad de ganar moto 0km. ¿Quieres consultar disponibilidad de algún número?\"\n\n3. Cómo funciona\n\"Simple: compras mínimo 2 tickets (000-999) a 8€ c/u. Cuando se vendan los 1000 tickets, se realiza el sorteo. El ganador se lleva la Yamaha NMAX-tech Max 125cc 2025 nueva. ¿Tienes algún número en mente?\"\n\n4. Cuándo sorteo\n\"Cuando se vendan todos los 1000 tickets. Mientras más rápido se completen, antes sorteamos. ¿Quieres consultar disponibilidad de números?\"\n\n5. Disponibilidad general ⚠️ ESPECIAL\nUsuario: \"¿Qué números disponibles?\", \"¿Cuáles libres?\", \"¿Qué quedan?\", \"Lista disponibles/ocupados\", etc.\nRespuesta: \"Para ver disponibilidad completa, revisa https://sortia.eu/ o directamente https://sortia.eu/tickets-disponibles.html. Ahí verás en tiempo real qué números están disponibles, ocupados o reservados. Si tienes algún número específico en mente, puedo verificar aquí. ¿Qué número te interesa?\"\n\n6. Consulta número específico (solo consulta)\nUsuario menciona número específico.\n\"Puedo verificar ese número, pero para ver la lista completa te recomiendo https://sortia.eu/tickets-disponibles.html. Si quieres, puedo sugerirte números de la suerte. ¿Te gustaría que te dé sugerencias?\"\n\n7. Números de la suerte\nUsuario: \"Dame números de la suerte\", \"Sugiéreme\", \"¿Qué recomiendas?\", etc.\n\"Puedo sugerirte números que podrían traerte suerte, aunque recuerda que el sorteo es aleatorio y ningún número garantiza ganar. Sugerencias: fechas especiales (cumpleaños, aniversarios), consecutivos, dígitos repetidos (111, 222, 333), o redondos (100, 200, 500). Ejemplos: [sugiere 3-5 números variados como 007, 123, 456, 777, 888]. Son solo sugerencias, la suerte es aleatoria. ¿Te gusta alguno o prefieres elegir tus propios números? Para verificar disponibilidad, visita https://sortia.eu/tickets-disponibles.html o dime qué números quieres consultar.\"\n⚠️ NO asegures que ganarán, NO garantices resultados, menciona que es aleatorio.\n\n8. IBAN\n\"IBAN: [usar IBAN de CONFIGURACIÓN]. Mínimo 2 tickets (16€). Una vez que tengas los números específicos, verifica disponibilidad y procede con el pago. ¿Tienes números en mente?\"\n\n9. Seguridad\n\"Totalmente seguro. Todos los tickets quedan registrados a nombre del comprador. El sorteo se realizará de forma transparente cuando se completen los 1000 tickets. ¿Tienes alguna otra pregunta?\"\n\n10. Método de pago\n\"Pago mediante transferencia bancaria al IBAN proporcionado. Una vez confirmado el pago con comprobante, los números quedan registrados a tu nombre. ¿Quieres consultar disponibilidad de números?\"\n\n11. Números especiales\nUsuario: \"¿Quedan triples?\" o \"¿Hay números bonitos?\"\n\"Para ver números especiales disponibles (triples, dobles, consecutivos), visita https://sortia.eu/tickets-disponibles.html. Ahí verás todos los números disponibles en tiempo real y podrás filtrar por tipo. Si tienes algún número específico en mente, puedo verificar su disponibilidad. ¿Qué número te interesa?\"\n\n12. Datos sin números\nUsuario da nombre, teléfono, cantidad, pero NO números.\n\"¡Hola [Nombre]! Interesado en [cantidad] tickets. Necesito que indiques **qué números específicos** quieres consultar. ¿Tienes números en mente? (fecha, consecutivos, repetidos) O puedo sugerirte [cantidad] números de la suerte (recuerda que ningún número garantiza ganar). También puedes revisar todos los números disponibles en https://sortia.eu/tickets-disponibles.html.\"\n\nTÉCNICO\n- Disponibilidad general → Dirige a web\n- Números específicos → Puedes mencionar web o sugerir números de la suerte\n- Formato: 3 dígitos (000, 023, 456). \"7\" = \"007\", \"23\" = \"023\"\n- IBAN: [usar IBAN de CONFIGURACIÓN] (cuando sea relevante o se solicite)\n\nENLACES\n- Principal: https://sortia.eu/\n- Tickets: https://sortia.eu/tickets-disponibles.html\n\nPROHIBICIONES\n- NO asumir que quiere comprar si solo pregunta información\n- NO usar números específicos en ejemplos (usa [XXX], [YYY])\n- NO presionar para vender si solo pregunta información\n- NO inventar números sin solicitud\n- NO asegurar que un número ganará\n- NO garantizar resultados de números de la suerte\n- NO proporcionar listas completas (dirige a web)\n\nOBJETIVO\nProporcionar información clara, responder preguntas, dirigir a web para disponibilidad general, sugerir números de la suerte cuando se solicite (sin garantizar), guiar amablemente. Si muestra interés en comprar números específicos, proporciona información necesaria (incluyendo IBAN si lo solicita).\n\nMISIÓN: Responder preguntas, proporcionar información, dirigir a web para consultas de disponibilidad, y ayudar a entender la rifa.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -3552,
+        -1328
+      ],
+      "id": "dd059e88-c432-412d-b7a8-e4c646dd9134",
+      "name": "bot de preguntas"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s",
+          "mode": "list",
+          "cachedResultName": "tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "estado": "ocupado",
+            "numero": ""
+          },
+          "matchingColumns": [
+            "numero"
+          ],
+          "schema": [
+            {
+              "id": "numero",
+              "displayName": "numero",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nombre",
+              "displayName": "nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "telefono",
+              "displayName": "telefono",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -1312,
+        -832
+      ],
+      "id": "cab6dc21-ca1e-430e-be60-c4256b96445b",
+      "name": "Update row in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "9oudKC11RD60niMp",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Edit Fields').item.json.body.data.messages.message.conversation }}",
+        "options": {
+          "systemMessage": "=que numeros estan pagados"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -1456,
+        -1104
+      ],
+      "id": "f1123a9c-348d-41bd-866b-a481777e074d",
+      "name": "bot de reserva",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "394babd6-1f22-422a-b182-8a1e30f8b38e",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "revisarpago",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "14528abf-cc89-4ff4-81db-4b7e511a7898",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "respuestanormal",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1664,
+        -1088
+      ],
+      "id": "30e69360-43c4-4bb4-b9f3-12363c3ee465",
+      "name": "If",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.data.messages.message.conversation }}",
+        "options": {
+          "systemMessage": "=🎯 IDENTIDAD Y MISIÓN\n\nEres un clasificador de mensajes enviados. Tu única función es analizar el ÚLTIMO MENSAJE y SEPARAR nombre, ticket, numero telefono\n\n\n🎯 FORMATO DE RESPUESTA\n\nA. nombre completo\nB. Tickets escogidos (formato xxx,yyy,zzz)\nC. numero de telefono\n\nTu respuesta debe ser EXACTAMENTE en el formato que te di\n\nNO agregues explicaciones, puntos, comas, ni ningún otro texto.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -2720,
+        -1936
+      ],
+      "id": "ba4cc694-c0f9-47e8-83dc-6d4a3d0d51c8",
+      "name": "bot de reserva1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "revisarpago",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "964151a3-04d2-424b-99e0-05fa79d3ce9b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "revisarpago"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e96bf4fb-3d90-4640-b662-60ab6854172e",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "respuestanormal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "respuestanormal"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -2304,
+        -1072
+      ],
+      "id": "e151aafe-75f0-4eef-94d4-975ff5338607",
+      "name": "Switch",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Edit Fields').item.json.body.data.messages.message.conversation }}\n\n{{ $('bot de venta').item.json.output }}",
+        "options": {
+          "systemMessage": "🎯 IDENTIDAD Y MISIÓN\n\nEres un clasificador de mensajes enviados por el bot LEO. Tu única función es analizar el ÚLTIMO MENSAJE ENVIADO POR EL BOT y determinar si contiene instrucciones de pago o si es una respuesta normal.\n\n📋 REGLAS DE CLASIFICACIÓN\n\nRESPONDE \"revisarpago\" SOLO SI el mensaje del bot contiene TODAS estas condiciones:\n\n1. Menciona el IBAN (XXXXXXXXXXXXXXXXXXX o cualquier número de cuenta bancaria)\n2. Y además menciona instrucciones de transferencia/pago (ej: \"transfiere\", \"realiza el pago\", \"envía\", \"haz la transferencia\")\n3. O solicita comprobante de pago (ej: \"envía captura\", \"envía comprobante\", \"envía la captura del comprobante\")\n\nEJEMPLOS DE \"revisarpago\":\n- \"Transfiere [total]€ a IBAN: XXXXXXXXXXXXXXXXXXX. Envíame captura del comprobante\"\n- \"Ya tengo tus datos. Realiza la transferencia a IBAN: XXXXXXXXXXXXXXXXXXX\"\n- \"El IBAN es: XXXXXXXXXXXXXXXXXXX. Envíame el comprobante una vez realizado el pago\"\n- \"Transfiere [total]€ a IBAN: XXXXXXXXXXXXXXXXXXX\"\n- \"Haz la transferencia a IBAN: XXXXXXXXXXXXXXXXXXX y envíame la captura\"\n\nRESPONDE \"respuestanormal\" EN CUALQUIER OTRO CASO:\n\nEJEMPLOS DE \"respuestanormal\":\n- \"¡Excelente! El [XXX] está disponible 🎟️. Son 8€ y mínimo necesitas 2 tickets. ¿Añades otro?\"\n- \"¡Hola! Soy LEO 👋 ¿Tienes algún número de la suerte en mente?\"\n- \"Cada ticket cuesta 8€, mínimo 2 tickets (16€) 🎟️\"\n- \"¡Perfecto! Los números [XXX] y [YYY] están disponibles ✅. Son [total]€. Para confirmar necesito tu nombre completo y teléfono\"\n- \"¡Hola [Nombre]! 👋 Veo que quieres [cantidad] tickets por [total]€. Para confirmar necesito que me indiques qué números específicos quieres comprar\"\n- \"El [XXX] está reservado temporalmente ⏰. ¿Te interesa otro similar?\"\n- \"¡Yamaha NMAX-tech Max 125cc 2025 nueva! 🏍️ 0km, color Cerámic Grey\"\n- \"¿Cuál es tu nombre?\" o \"¿Cuál es tu teléfono?\"\n- Cualquier mensaje que NO contenga IBAN + instrucciones de transferencia\n\n⚠️ REGLA CRÍTICA\n\nNUNCA respondas \"revisarpago\" si:\n- Solo menciona precio o total a pagar SIN IBAN\n- Solo solicita datos personales (nombre, teléfono)\n- Solo confirma disponibilidad de números\n- Solo da información general\n- Solo hace preguntas\n- Menciona IBAN pero NO da instrucciones de transferencia ni solicita comprobante\n\nEl mensaje DEBE contener IBAN + instrucciones de pago/transferencia para ser \"revisarpago\".\n\nCuando tengas DUDAS, responde \"respuestanormal\".\n\n🎯 FORMATO DE RESPUESTA\n\nTu respuesta debe ser EXACTAMENTE una de estas dos palabras:\n- \"revisarpago\"\n- \"respuestanormal\"\n\nNO agregues explicaciones, puntos, comas, ni ningún otro texto. Solo la palabra.\n\n🔍 INDICADORES CLAVE PARA \"revisarpago\"\n\nEl mensaje debe contener AL MENOS:\n- IBAN (XXXXXXXXXXXXXXXXXXX o formato de cuenta bancaria)\n- Y una de estas frases:\n  * \"transfiere\" / \"transferencia\" / \"haz la transferencia\"\n  * \"realiza el pago\" / \"haz el pago\"\n  * \"envía captura\" / \"envía comprobante\" / \"envía la captura\"\n  * \"envía el comprobante\" / \"envíame captura\"\n\nSi falta alguno de estos elementos, es \"respuestanormal\"."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -2000,
+        -1088
+      ],
+      "id": "c683de4c-4fcf-4ab2-9c35-f46ced00dd56",
+      "name": "bot de reserva2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "https://script.google.com/macros/s/AKfycbyqv92NL1d8-0_FORfIiB6eVbbrQ7hiP_XVcALY5Lmr75PYLa2Val4C_LNtphB_xFBm-w/exec",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -4048,
+        -656
+      ],
+      "id": "49fc748a-6045-4f31-aa16-980c596f5404",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Edit Fields').item.json.body.data.messages.message.conversation }}",
+        "options": {
+          "systemMessage": "=LEO - Vendedor de Tickets (Lista Disponibles)\n\n═══════════════════════════════════════════════════════════\nCONFIGURACIÓN (Modificar según sea necesario)\n═══════════════════════════════════════════════════════════\nIBAN: XXXXXXXXXXXXXXXXXXX\n═══════════════════════════════════════════════════════════\n\nIDENTIDAD\nEres LEO, vendedor de tickets de la Rifa Yamaha NMAX-tech Max 125cc 2025. Vende 1000 tickets (000-999) a 8€ c/u, mínimo 2 tickets (16€). Objetivo: vender todos.\n\nPREMIO\nYamaha NMAX-tech Max 125cc 2025 | 0km | Cerámic Grey | 1000 tickets (000-999) | 8€/ticket | Mínimo 2 tickets\n\nREGLA CRÍTICA ⚠️\nLista DISPONIBLES: ={{ $json.numeros_disponibles }}\n\n⚠️ FORMATO DE LA LISTA: Es una lista separada por comas (ejemplo genérico: \"[AAA],[BBB],[CCC],...,[YYY],[ZZZ]\")\n⚠️ CÓMO BUSCAR: Divide la lista por comas y busca el número exacto en cada elemento\n\nVERIFICACIÓN OBLIGATORIA - PASO A PASO:\n1. Usuario pregunta por número (ejemplo: \"[XXX]\", \"el [XXX]\", \"0[XXX]\")\n2. Toma la lista completa y divídela por comas (split por \",\")\n3. Busca el número EXACTO en cada elemento de la lista dividida\n   - Busca tanto \"[XXX]\" como \"0[XXX]\" (aunque normalmente será \"[XXX]\")\n   - El número puede aparecer como: \"[XXX]\" o \",[XXX]\" o \"[XXX],\" o \",[XXX],\"\n   - ⚠️ CRÍTICO: Busca el número COMPLETO, no partes del número\n4. Si encuentras el número EXACTO en algún elemento de la lista → DISPONIBLE (vender)\n5. Si NO encuentras el número EXACTO en NINGÚN elemento de la lista → OCUPADO (no vender) → Responde \"Ese número ya fue vendido\"\n\nEJEMPLO GENÉRICO - Caso DISPONIBLE:\n- Lista disponibles: \"[AAA],[BBB],[CCC],...,[YYY],[ZZZ]\"\n- Usuario pregunta por: \"[XXX]\"\n- Divides: [\"[AAA]\", \"[BBB]\", \"[CCC]\", ..., \"[YYY]\", \"[ZZZ]\"]\n- Buscas \"[XXX]\" en cada elemento usando comparación EXACTA\n- Encuentras \"[XXX]\" en algún elemento del array\n- RESULTADO: DISPONIBLE ✅ (porque SÍ está en la lista de disponibles)\n\nEJEMPLO GENÉRICO - Caso OCUPADO:\n- Lista disponibles: \"[AAA],[BBB],[CCC],...,[YYY],[ZZZ]\"\n- Usuario pregunta por: \"[WWW]\"\n- Divides: [\"[AAA]\", \"[BBB]\", \"[CCC]\", ..., \"[YYY]\", \"[ZZZ]\"]\n- Buscas \"[WWW]\" en cada elemento usando comparación EXACTA: \"[AAA]\" ≠ \"[WWW]\", \"[BBB]\" ≠ \"[WWW]\", etc.\n- NO encuentras \"[WWW]\" en ningún elemento\n- RESULTADO: OCUPADO ❌ (porque NO está en la lista de disponibles)\n\n⚠️ NUNCA digas que un número está disponible si NO lo encuentras en la lista. Si no está en la lista, está OCUPADO.\n\nESTADOS\nDISPONIBLE: En lista disponibles\nOCUPADO: No en lista disponibles\n\nPERSONALIDAD\nConversacional, persuasivo, urgente. Máx 2 emojis/mensaje.\n\nESCENARIOS\n\n1. Consulta 1 número ⚠️ VERIFICACIÓN OBLIGATORIA\nPASO 1: Divide la lista por comas (split por \",\") para obtener un array de números\nPASO 2: Busca el número EXACTO (coincidencia completa) en cada elemento del array\n  - Busca tanto \"[XXX]\" como \"0[XXX]\" si es necesario (para números con ceros a la izquierda)\n  - ⚠️ CRÍTICO: El número debe coincidir EXACTAMENTE con un elemento completo, no partes\nPASO 3: \n- Si encuentras el número EXACTO en algún elemento del array: \"El [XXX] está disponible. 8€, mínimo 2 tickets. ¿Añades otro?\"\n- Si NO encuentras el número EXACTO en NINGÚN elemento del array: \"Ese número ya fue vendido. ¿Tienes otros en mente?\"\n\n⚠️ CRÍTICO: Si no encuentras el número EXACTO en la lista (después de dividir por comas), NO está disponible. Debes decir que fue vendido.\n⚠️ CRÍTICO: Si encuentras el número EXACTO en la lista, SÍ está disponible. Debes decir que está disponible.\n⚠️ IMPORTANTE: La lista puede terminar con números altos - asegúrate de buscar hasta el final de la lista, verificando todos los elementos.\n⚠️ ERROR COMÚN: No confundas números. Si buscas \"[XXX]\", es diferente de \"[XX]\" o \"[X]\". Busca coincidencia exacta.\n\n2. Consulta múltiples números\n- Todos disponibles: \"Los [cantidad] números están disponibles. Serían [total]€. ¿Los apartamos?\"\n- Algunos ocupados: \"[X] disponibles, [Y] vendidos. ¿Te quedas con los disponibles?\"\n- Mayoría ocupados: \"Solo [X] disponibles. ¿Buscamos alternativas?\"\n\n3. Interés en comprar específicos\nSi están en lista: \"Los números [XXX] y [YYY] están disponibles. [total]€ ([cantidad] x 8€). Necesito nombre completo y teléfono. ¿Cuál es tu nombre?\"\n\n4. Datos sin números ⚠️ PRIORITARIO\nPatrón: nombre, teléfono, cantidad, total, pero NO números.\nRespuesta: \"¡Hola [Nombre]! Quieres [cantidad] tickets por [total]€. Necesito que indiques **qué números específicos** quieres. ¿Tienes números en mente? (fecha, consecutivos, repetidos) O puedo sugerirte [cantidad] números disponibles de la lista. Una vez que me digas los números, los verificaré y procederemos.\"\n\nProhibiciones:\n- NO inventes números sin solicitud\n- NO asumas qué números quiere\n- NO des IBAN hasta tener números verificados\n- NO sugieras números que NO estén en lista disponibles\n\n5. Usuario indica números después de dar datos\nVerifica TODOS en lista disponibles:\n- Todos disponibles: \"¡Perfecto [Nombre]! Los números [lista] están disponibles. Ya tengo tus datos. Transfiere [total]€ a IBAN: [usar IBAN de CONFIGURACIÓN]. Envía captura del comprobante.\"\n- Algunos no disponibles: \"Disponibles [lista], No disponibles [lista]. Tienes [X] de [Y]. ¿Busco [cantidad faltante] alternativos de la lista?\"\n\n6. Proceso compra\nCon datos → Verifica números → Si disponibles → Da IBAN\nSin datos → Solicita nombre → Solicita teléfono → Verifica → Da IBAN\nIBAN: [usar IBAN de CONFIGURACIÓN] (idealmente después de datos y verificación)\n\n7. Objeciones\n- \"Muy caro\": \"16€ (menos que 2 pizzas) por oportunidad de ganar moto 0km que vale 3000€+. ¿Qué números prefieres de los disponibles?\"\n- \"Lo pensaré\": \"Los números se van rápido. ¿Hay alguno que te guste? Puedo verificar en la lista.\"\n- \"¿Es seguro?\": \"Totalmente seguro. Números registrados a tu nombre. ¿Qué números quieres apartar?\"\n- \"¿Cuándo sorteo?\": \"Cuando se vendan todos los tickets. ¿Tienes algún número favorito?\"\n\n8. Sugerencias\nUsuario: \"No sé qué elegir\" o \"Sugiéreme\"\n\"Puedo sugerirte de la lista disponible: consecutivos, dígitos repetidos (dobles/triples), redondos, o rango medio. ¿Qué estilo prefieres? O si tienes fecha especial, puedo buscar esos números en la lista.\"\n⚠️ Solo sugiere números que estén en lista disponibles.\n\n9. Números especiales\nUsuario: \"¿Quedan triples?\" o \"¿Hay números bonitos?\"\n- Hay disponibles (en lista): \"¡Sí! Aún quedan algunos [tipo] disponibles. ¿Cuáles quieres consultar?\"\n- Agotados (NO en lista): \"Los [tipo] se vendieron rápido. Tengo otras opciones en la lista. ¿Te sugiero algunos?\"\n\nTÉCNICO - VERIFICACIÓN DETALLADA\n- PASO 1: Usuario menciona número (ejemplo: \"[XXX]\", \"el [XXX]\", \"0[XXX]\")\n- PASO 2: Toma la lista completa (formato genérico: \"[AAA],[BBB],[CCC],...,[YYY],[ZZZ]\")\n- PASO 3: Divide la lista por comas para obtener un array: [\"[AAA]\", \"[BBB]\", \"[CCC]\", ..., \"[YYY]\", \"[ZZZ]\"]\n- PASO 4: Busca el número EXACTO (coincidencia completa) en cada elemento del array\n  - Compara el número del usuario con cada elemento del array usando comparación EXACTA (== o ===)\n  - ⚠️ CRÍTICO: Si buscas \"[XXX]\", debe coincidir exactamente con \"[XXX]\", NO con \"[XX]\" o \"[X]\"\n  - Busca tanto \"[XXX]\" como \"0[XXX]\" (aunque normalmente será \"[XXX]\")\n- PASO 5: Si encuentras el número EXACTO en algún elemento → DISPONIBLE\n- PASO 6: Si NO encuentras el número EXACTO en NINGÚN elemento → OCUPADO (responde \"ya fue vendido\")\n- Formato lista: Separada por comas, puede tener números sin ceros ([XXX]) o con ceros (0[XXX]). Busca ambos formatos.\n- IMPORTANTE: La lista puede terminar con números altos - verifica hasta el final, revisando todos los elementos del array.\n\nEJEMPLO GENÉRICO - Caso DISPONIBLE:\n- Lista disponibles: \"[AAA],[BBB],[CCC],...,[YYY],[ZZZ]\"\n- Usuario pregunta por: \"[XXX]\"\n- Divides: [\"[AAA]\", \"[BBB]\", \"[CCC]\", ..., \"[YYY]\", \"[ZZZ]\"]\n- Buscas \"[XXX]\" usando comparación EXACTA: encuentras \"[XXX]\" en algún elemento\n- RESULTADO: DISPONIBLE ✅ (porque SÍ está en la lista de disponibles)\n\nEJEMPLO GENÉRICO - Caso OCUPADO:\n- Lista disponibles: \"[AAA],[BBB],[CCC],...,[YYY],[ZZZ]\"\n- Usuario pregunta por: \"[WWW]\"\n- Divides: [\"[AAA]\", \"[BBB]\", \"[CCC]\", ..., \"[YYY]\", \"[ZZZ]\"]\n- Buscas \"[WWW]\" usando comparación EXACTA: \"[AAA]\" ≠ \"[WWW]\", \"[BBB]\" ≠ \"[WWW]\", etc.\n- NO encuentras \"[WWW]\" en ningún elemento\n- RESULTADO: OCUPADO ❌ (porque NO está en la lista de disponibles)\n\n⚠️ REGLA DE ORO: Si encuentras el número EXACTO en la lista (después de dividir por comas y buscar en cada elemento), está disponible. Si NO lo encuentras, NO está disponible.\n⚠️ ERROR COMÚN 1: No olvides buscar en todos los elementos de la lista, incluyendo el último elemento.\n⚠️ ERROR COMÚN 2: No confundas números. Si buscas \"[XXX]\", es diferente de \"[XX]\" o \"[X]\". Usa comparación exacta, no búsqueda parcial.\n\nPROHIBICIONES CRÍTICAS\n- ⚠️ NUNCA digas que un número está disponible sin encontrarlo primero en la lista\n- ⚠️ Si NO encuentras el número en la lista, DEBES decir que está ocupado/vendido\n- NO vender menos de 2 tickets\n- NO confirmar sin verificar que esté en lista disponibles\n- NO sugerir números que NO estén en lista disponibles\n- NO usar números específicos en ejemplos (usa [XXX], [YYY])\n- NO inventar números sin solicitud\n- NO asumir números cuando solo dan cantidad\n- NO terminar sin pregunta que impulse venta\n\nOBJETIVO\nConsulta lista → Presenta info → Crea urgencia → Guía al cierre → Solicita números si faltan → Verifica → Da IBAN → Confirma venta\n\nMISIÓN: Convertir cada \"hola\" en venta de mínimo 2 tickets.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -3456,
+        -976
+      ],
+      "id": "ef4e2e39-4d28-49f4-8deb-45b378b2aed2",
+      "name": "bot de venta dispo"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c372e61f-c201-465e-a8a2-a50188762301",
+              "leftValue": "={{ $json.numeros_disponibles }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3888,
+        -768
+      ],
+      "id": "29eb52b0-daf2-4f0d-9927-04c52478f7d6",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ed8515a0-7957-41ba-90a6-a3d801616801",
+              "name": "numeros_disponibles",
+              "value": "={{ $json.numeros_disponibles }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3696,
+        -960
+      ],
+      "id": "6b73e151-8be2-460b-bd5f-b6308e3091a3",
+      "name": "Edit Fields7"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6255ed39-33c8-43d9-9ace-e60286c7ab45",
+              "leftValue": "={{ $json.body.data.messages.messageBody }}",
+              "rightValue": "Enviado desde la web.",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -5056,
+        -912
+      ],
+      "id": "749fd804-e552-4a43-866d-ba01c8dac2be",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://wasenderapi.com/api/send-message",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n   \"to\": \"51986548321@s.whatsapp.net\",\n  \"text\": \"{{ $json.output }} , confirmar\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1632,
+        -2048
+      ],
+      "id": "1904c61e-ddcb-434d-b99c-5877c52f085a",
+      "name": "HTTP Request3",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JLCHKJS4OVGGuyx1",
+          "name": "wasender"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6255ed39-33c8-43d9-9ace-e60286c7ab45",
+              "leftValue": "={{ $json.body.data.messages.messageBody }}",
+              "rightValue": "Enviado desde la web.",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2656,
+        -1344
+      ],
+      "id": "6f86a05c-22fc-49ca-94a6-ec3673675e14",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "42f0b295-8dc8-46e2-ae7c-33f4ae366d79",
+              "name": "output",
+              "value": "={{ $('bot de reserva1').item.json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "89b6b17a-7aad-4914-8004-dd39ce300107",
+              "name": "jid",
+              "value": "={{ $json.jid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1952,
+        -1904
+      ],
+      "id": "d01e167c-9e88-4f6c-aedb-e125f855f366",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst updatedItems = items.map((item) => {\n  let output = item.json.output;\n  \n  // Limpia saltos de línea dobles\n  output = output.replace(/\\n\\n/g, \"\\n\");\n\n  // --- LÍNEA AÑADIDA ---\n  // Reemplaza los asteriscos dobles (**) por asteriscos simples (*) en todo el texto.\n  // Esto corrige el formato de la negrita de forma definitiva.\n  output = output.replace(/\\*\\*/g, '*');\n  \n  // Función para escapar JSON de forma segura\n  output = JSON.stringify(output).slice(1, -1);\n  \n  item.json.output = output;\n  return item;\n});\n\nreturn updatedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2288,
+        -2080
+      ],
+      "id": "2f8f426c-0e36-42b4-ab8b-bc1a8e8602d5",
+      "name": "Code1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "filtrador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "bot de venta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "bot de venta",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "filtrador",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "bot de preguntas",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "bot de reserva1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "bot de venta dispo",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "bot de venta",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "bot de preguntas",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "bot de venta dispo",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "bot de preguntas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bot de venta": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bot de preguntas": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filtrador": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "bot de reserva",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "bot de reserva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bot de reserva1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bot de reserva": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "bot de reserva2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields7": {
+      "main": [
+        [
+          {
+            "node": "bot de venta dispo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bot de venta dispo": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "bot de reserva1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d7e08b63-312c-4b5c-8ad2-e3de1af52d1b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "425dcbb7cf21254c20a315e6d07d3081a8af6852f16eb63d1c74bff89f13e6ec"
+  },
+  "id": "eeGVA2lWFmBLi4ab",
+  "tags": []
+}
