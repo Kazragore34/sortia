@@ -140,28 +140,29 @@ function testUpdate() {
 
 ## ⚙️ Paso 3: Configurar en el Código
 
-Una vez que tengas la URL del script desplegado, necesitas agregarla a la configuración en `js/main.js`.
-
-Abre `js/main.js` y busca la sección `CONFIG`:
+**¡Ya está configurado!** La URL de tu script ya está en el código:
 
 ```javascript
-googleSheets: {
-    sheetId: '11AJDOkCz9hdMGI0LHaub41qWxwOSXBx_zXaeW-Fdp5s',
-    sheetName: 'Hoja 1',
-    method: 'api',
-    options: {
-        apiKey: 'AIzaSyBTg5ozE85sC1Qvw2ZbxnTW5Jxnn0cL4iE',
-        range: 'D2:D1002',
-        ticketsRange: 'A2:D1002',
-        // AGREGAR ESTA LÍNEA CON LA URL DE TU SCRIPT:
-        updateScriptUrl: 'https://script.google.com/macros/s/TU_SCRIPT_ID/exec'
-    }
-}
+updateScriptUrl: 'https://script.google.com/macros/s/AKfycbyZFnHjKHCl03l_VBQm-cyPSF2cx96m2fQYGjKLYM9yDCiQKlCGdG3t6dl5Qgg8TtGc9g/exec'
 ```
 
-## ✅ Paso 4: Probar
+Si necesitas cambiarla en el futuro, busca esta línea en `js/main.js` (línea 33).
 
-1. Abre tu página web
+## ✅ Paso 4: Actualizar el Script (IMPORTANTE)
+
+**IMPORTANTE:** El código del script ha sido actualizado para solucionar problemas de CORS. Debes actualizar tu script en Google Apps Script:
+
+1. Abre tu Google Sheet → **Extensiones** → **Apps Script**
+2. **Reemplaza TODO el código** con el contenido del archivo `google-apps-script-code.js`
+3. **Guarda** el proyecto (Ctrl+S)
+4. **Vuelve a desplegar**:
+   - Haz clic en **Desplegar** → **Gestionar implementaciones**
+   - Haz clic en el icono de **lápiz (✏️)** para editar
+   - Haz clic en **Desplegar** (no necesitas cambiar nada, solo volver a desplegar)
+
+## ✅ Paso 5: Probar
+
+1. Abre tu página web (https://sortia.eu)
 2. Selecciona algunos tickets y completa el formulario
 3. Haz clic en "Enviar a WhatsApp"
 4. Revisa la consola del navegador (F12) para ver los mensajes

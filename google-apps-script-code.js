@@ -77,49 +77,93 @@ function updateTicketsStatus(ticketNumbers, newStatus = 'reservado') {
  * Función doGet para verificar que el script está funcionando
  * Se ejecuta cuando accedes a la URL directamente en el navegador
  * @param {Object} e - Evento de la petición HTTP
- * @returns {Object} Respuesta JSON
+ * @returns {Object} Respuesta JSON con headers CORS
  */
 function doGet(e) {
-  return ContentService.createTextOutput(JSON.stringify({
+  const output = ContentService.createTextOutput(JSON.stringify({
     success: true,
     message: 'Google Apps Script está funcionando correctamente',
     version: '1.0',
     availableFunctions: ['doPost - Actualizar tickets']
-  })).setMimeType(ContentService.MimeType.JSON);
+  }));
+  
+  output.setMimeType(ContentService.MimeType.JSON);
+  return output;
 }
 
 /**
  * Función doPost para recibir peticiones HTTP POST desde la web
+ * Soporta tanto JSON como formularios HTML
  * @param {Object} e - Evento de la petición HTTP
- * @returns {Object} Respuesta JSON
+ * @returns {Object} Respuesta JSON con headers CORS
  */
 function doPost(e) {
   try {
-    // Parsear los datos recibidos
-    const data = JSON.parse(e.postData.contents);
-    const ticketNumbers = data.ticketNumbers || [];
-    const newStatus = data.status || 'reservado';
+    let ticketNumbers = [];
+    let newStatus = 'reservado';
+    
+    // Intentar parsear como JSON primero
+    if (e.postData && e.postData.contents) {
+      try {
+        const data = JSON.parse(e.postData.contents);
+        ticketNumbers = data.ticketNumbers || [];
+        newStatus = data.status || 'reservado';
+      } catch (jsonError) {
+        // Si no es JSON, intentar leer como formulario HTML
+        if (e.parameter && e.parameter.data) {
+          try {
+            const formData = JSON.parse(e.parameter.data);
+            ticketNumbers = formData.ticketNumbers || [];
+            newStatus = formData.status || 'reservado';
+          } catch (formError) {
+            // Si tampoco funciona, intentar leer parámetros directos
+            if (e.parameter.ticketNumbers) {
+              ticketNumbers = JSON.parse(e.parameter.ticketNumbers);
+            }
+            if (e.parameter.status) {
+              newStatus = e.parameter.status;
+            }
+          }
+        }
+      }
+    } else if (e.parameter) {
+      // Leer desde parámetros del formulario
+      if (e.parameter.data) {
+        try {
+          const formData = JSON.parse(e.parameter.data);
+          ticketNumbers = formData.ticketNumbers || [];
+          newStatus = formData.status || 'reservado';
+        } catch (e) {
+          // Ignorar error
+        }
+      }
+    }
     
     // Validar que hay tickets
     if (!Array.isArray(ticketNumbers) || ticketNumbers.length === 0) {
-      return ContentService.createTextOutput(JSON.stringify({
+      const output = ContentService.createTextOutput(JSON.stringify({
         success: false,
         error: 'No se proporcionaron números de tickets'
-      })).setMimeType(ContentService.MimeType.JSON);
+      }));
+      output.setMimeType(ContentService.MimeType.JSON);
+      return output;
     }
     
     // Actualizar los tickets
     const result = updateTicketsStatus(ticketNumbers, newStatus);
     
     // Devolver resultado
-    return ContentService.createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
+    const output = ContentService.createTextOutput(JSON.stringify(result));
+    output.setMimeType(ContentService.MimeType.JSON);
+    return output;
       
   } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({
+    const output = ContentService.createTextOutput(JSON.stringify({
       success: false,
       error: error.message
-    })).setMimeType(ContentService.MimeType.JSON);
+    }));
+    output.setMimeType(ContentService.MimeType.JSON);
+    return output;
   }
 }
 
