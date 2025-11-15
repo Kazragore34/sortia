@@ -1249,18 +1249,30 @@ function generateWhatsAppLink(name, lastname, phone, ticketAmount, total, ticket
     const sortedNumbers = ticketNumbers.sort((a, b) => a - b);
     const formattedNumbers = sortedNumbers.map(num => `#${String(num).padStart(3, '0')}`).join(', ');
     
+    // Crear lista de números de tickets (uno por línea si hay muchos)
+    let ticketsList = '';
+    if (sortedNumbers.length <= 5) {
+        // Si hay 5 o menos, mostrarlos en una línea
+        ticketsList = formattedNumbers;
+    } else {
+        // Si hay más de 5, mostrarlos en líneas separadas
+        ticketsList = sortedNumbers.map(num => `• #${String(num).padStart(3, '0')}`).join('\n');
+    }
+    
     const message = `¡Hola! Me interesa participar en el sorteo de la Yamaha NMAX.
 
 📋 *Información de la compra:*
 • Cantidad de tickets: ${ticketAmount}
-• Números de tickets seleccionados: ${formattedNumbers}
 • Total a pagar: ${total}
 
-👤 *Mis datos:*
-• Nombre: ${name} ${lastname}
+🎫 *Números de tickets seleccionados:*
+${ticketsList}
+
+👤 *Mis datos de contacto:*
+• Nombre completo: ${name} ${lastname}
 • Teléfono: ${phone}
 
-Por favor, confírmame la disponibilidad y cómo proceder con el pago. ¡Gracias!`;
+Por favor, confírmame la disponibilidad de estos números y cómo proceder con el pago. ¡Gracias!`;
 
     // Codificar el mensaje para URL
     const encodedMessage = encodeURIComponent(message);
