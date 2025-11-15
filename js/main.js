@@ -1203,7 +1203,7 @@ function initPurchaseModal() {
     
     // Botón enviar a WhatsApp
     if (sendBtn) {
-        sendBtn.addEventListener('click', function() {
+        sendBtn.addEventListener('click', async function() {
             const name = document.getElementById('customer-name').value.trim();
             const lastname = document.getElementById('customer-lastname').value.trim();
             const phone = document.getElementById('customer-phone').value.trim();
@@ -1228,8 +1228,20 @@ function initPurchaseModal() {
                 return;
             }
             
-            // Generar y abrir link de WhatsApp
-            generateWhatsAppLink(name, lastname, phone, ticketAmount, total, Array.from(selectedTickets));
+            // Deshabilitar botón y mostrar estado de carga
+            sendBtn.disabled = true;
+            const originalText = sendBtn.innerHTML;
+            sendBtn.innerHTML = '<span class="flex items-center gap-2"><svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Actualizando...</span>';
+            
+            try {
+                // Generar y abrir link de WhatsApp (esto también actualiza Google Sheets)
+                await generateWhatsAppLink(name, lastname, phone, ticketAmount, total, Array.from(selectedTickets));
+            } catch (error) {
+                console.error('Error al procesar la compra:', error);
+                alert('Hubo un error al procesar tu compra. Por favor, intenta de nuevo.');
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = originalText;
+            }
         });
     }
     
@@ -1242,9 +1254,96 @@ function initPurchaseModal() {
 }
 
 // ============================================
+// ACTUALIZAR ESTADO EN GOOGLE SHEETS
+// ============================================
+/**
+ * Actualiza el estado de los tickets en Google Sheets de "disponible" a "reservado"
+ * @param {Array<number>} ticketNumbers - Array de números de tickets a actualizar
+ * @returns {Promise<boolean>} - true si se actualizó correctamente, false si hubo error
+ */
+async function updateTicketsStatus(ticketNumbers) {
+    try {
+        const sheetId = CONFIG.googleSheets.sheetId;
+        const sheetName = CONFIG.googleSheets.sheetName || 'Hoja 1';
+        const apiKey = CONFIG.googleSheets.options?.apiKey;
+
+        if (!apiKey) {
+            console.warn('⚠️ No hay API Key configurada para actualizar Google Sheets');
+            return false;
+        }
+
+        // Preparar las actualizaciones: cada ticket está en la fila (número + 2) porque:
+        // - Fila 1: Headers
+        // - Fila 2: Ticket 000 (índice 0)
+        // - Fila 3: Ticket 001 (índice 1)
+        // etc.
+        const updates = ticketNumbers.map(ticketNumber => {
+            const rowNumber = ticketNumber + 2; // +2 porque la fila 1 es header y empezamos desde fila 2
+            const range = `${sheetName}!D${rowNumber}`; // Columna D es el estado
+            
+            return {
+                range: range,
+                values: [['reservado']]
+            };
+        });
+
+        // Usar batchUpdate para actualizar múltiples celdas
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchUpdate?key=${apiKey}`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                valueInputOption: 'RAW',
+                data: updates
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('❌ Error al actualizar Google Sheets:', errorData);
+            
+            // Si el error es de permisos, sugerir usar Google Apps Script
+            if (response.status === 403 || response.status === 401) {
+                console.warn('⚠️ La API Key no tiene permisos de escritura. Considera usar Google Apps Script.');
+            }
+            
+            return false;
+        }
+
+        const result = await response.json();
+        console.log('✅ Tickets actualizados en Google Sheets:', ticketNumbers);
+        
+        // Invalidar caché para que se recarguen los datos
+        if (window.ticketsCounter && window.ticketsCounter.googleSheets) {
+            window.ticketsCounter.googleSheets.cache = null;
+            window.ticketsCounter.googleSheets.cacheTime = 0;
+            // Recargar datos después de un breve delay
+            setTimeout(() => {
+                if (window.ticketsCounter && window.ticketsCounter.loadFromGoogleSheets) {
+                    window.ticketsCounter.loadFromGoogleSheets();
+                }
+            }, 1000);
+        }
+        
+        // Actualizar también el set de tickets ocupados localmente
+        ticketNumbers.forEach(num => {
+            occupiedTicketsSet.add(num);
+        });
+        
+        return true;
+    } catch (error) {
+        console.error('❌ Error al actualizar estado de tickets:', error);
+        return false;
+    }
+}
+
+// ============================================
 // GENERAR LINK DE WHATSAPP
 // ============================================
-function generateWhatsAppLink(name, lastname, phone, ticketAmount, total, ticketNumbers) {
+async function generateWhatsAppLink(name, lastname, phone, ticketAmount, total, ticketNumbers) {
     // Ordenar los números y formatearlos
     const sortedNumbers = ticketNumbers.sort((a, b) => a - b);
     const formattedNumbers = sortedNumbers.map(num => `#${String(num).padStart(3, '0')}`).join(', ');
@@ -1273,6 +1372,16 @@ ${ticketsList}
 • Teléfono: ${phone}
 
 Por favor, confírmame la disponibilidad de estos números y cómo proceder con el pago. ¡Gracias!`;
+
+    // Actualizar estado en Google Sheets antes de enviar
+    console.log('🔄 Actualizando estado de tickets en Google Sheets...');
+    const updateSuccess = await updateTicketsStatus(sortedNumbers);
+    
+    if (updateSuccess) {
+        console.log('✅ Estados actualizados correctamente');
+    } else {
+        console.warn('⚠️ No se pudieron actualizar los estados automáticamente. Los tickets se marcarán manualmente.');
+    }
 
     // Codificar el mensaje para URL
     const encodedMessage = encodeURIComponent(message);
@@ -1508,7 +1617,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const countdown = new CountdownTimer(CONFIG.deadline);
     
     // Inicializar contador de tickets con configuración de Google Sheets
-    const ticketsCounter = new TicketsCounter(
+    window.ticketsCounter = new TicketsCounter(
         CONFIG.totalTickets,
         CONFIG.googleSheets ? {
             sheetId: CONFIG.googleSheets.sheetId,
